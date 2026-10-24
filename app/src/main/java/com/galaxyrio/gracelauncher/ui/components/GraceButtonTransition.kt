@@ -36,7 +36,7 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.GraceButtonAction
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull

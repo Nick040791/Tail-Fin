@@ -21,7 +21,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.ui.settings.LocalSettingsBottomInset
 import com.galaxyrio.gracelauncher.data.ItemIcon
 import com.galaxyrio.gracelauncher.data.sectionForLabel

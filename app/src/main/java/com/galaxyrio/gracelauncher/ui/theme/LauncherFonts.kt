@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.res.ResourcesCompat
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.AppFont
 import com.galaxyrio.gracelauncher.data.ClockFontStore
 import com.galaxyrio.gracelauncher.data.ClockPresetFont
@@ -27,13 +27,26 @@ import android.graphics.fonts.Font as PlatformFont
 import android.graphics.fonts.FontFamily as PlatformFontFamily
 import android.graphics.fonts.FontStyle as PlatformFontStyle
 
+internal fun createWeightedTypeface(base: Typeface, weight: Int): Typeface =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        Typeface.create(base, weight, false)
+    } else {
+        Typeface.create(base, if (weight >= 600) Typeface.BOLD else Typeface.NORMAL)
+    }
+
 /**
- * Josefin Sans first, with bundled Noto fallbacks on Android 10+ and system CJK fonts.
+ * Montserrat first (with Josefin & bundled Noto fallbacks on Android 10+ and system CJK fonts).
  * Separate weight descriptors preserve real variable-font weights: wrapping a single
  * Android Typeface in Compose FontFamily would ignore subsequent TextStyle weights.
  */
 val LauncherFontFamily: FontFamily = FontFamily(
     (100..700 step 100).map { weight -> LauncherFont(FontWeight(weight)) },
+)
+
+val MontserratXmlFontFamily: FontFamily = FontFamily(
+    Font(R.font.montserrat_regular, FontWeight.Normal),
+    Font(R.font.montserrat_medium, FontWeight.Medium),
+    Font(R.font.montserrat_bold, FontWeight.Bold),
 )
 
 // The app and clock share the same bundled font families, not separate font buffers.
@@ -55,7 +68,8 @@ internal fun rememberAppFontFamily(id: String?, library: FontLibrary = LocalFont
         val ids = (listOfNotNull(id) + library.selected).distinct()
         when {
             ids.isEmpty() || ids.first() == AppFont.System.id -> FontFamily.Default
-            ids == listOf(FontLibrary.Josefin) -> LauncherFontFamily
+            ids.first() == AppFont.Monospace.id -> FontFamily.Monospace
+            ids == listOf(FontLibrary.Josefin) || ids == listOf(FontLibrary.Montserrat) -> LauncherFontFamily
             else -> FontFamily((100..900 step 100).map { SelectedFont(ids, FontWeight(it)) })
         }
     }
@@ -88,13 +102,14 @@ private object SelectedTypefaceLoader : AndroidFont.TypefaceLoader {
         }
     }
 
-    /** Android 9 supports one custom primary face plus the system's glyph fallback. */
+    /** Android 8–9 supports one custom primary face plus the system's glyph fallback. */
     private fun primaryTypeface(context: Context, ids: List<String>, weight: Int): Typeface {
         ids.forEach { id ->
             val face = runCatching {
                 when (id) {
-                    FontLibrary.Josefin -> launcherTypeface(context, weight.coerceAtMost(700))
-                    AppFont.System.id -> Typeface.create(Typeface.DEFAULT, weight, false)
+                    FontLibrary.Montserrat, FontLibrary.Josefin -> launcherTypeface(context, weight.coerceAtMost(700))
+                    AppFont.System.id -> createWeightedTypeface(Typeface.DEFAULT, weight)
+                    AppFont.Monospace.id -> createWeightedTypeface(Typeface.MONOSPACE, weight)
                     AppFont.NotoSans.id -> Typeface.Builder(context.assets, "fonts/noto_sans.ttf")
                         .setFontVariationSettings("'wght' $weight").setWeight(weight)
                         .setItalic(false).setFallback("sans-serif").build()
@@ -107,7 +122,7 @@ private object SelectedTypefaceLoader : AndroidFont.TypefaceLoader {
                             AppFont.LuckiestGuy.id -> R.font.luckiest_guy
                             else -> null
                         }
-                        if (resource != null) ResourcesCompat.getFont(context, resource)?.let { Typeface.create(it, weight, false) }
+                        if (resource != null) ResourcesCompat.getFont(context, resource)?.let { createWeightedTypeface(it, weight) }
                         else ClockFontStore(context).file(id)?.let {
                             Typeface.Builder(it).setFontVariationSettings("'wght' $weight").setWeight(weight)
                                 .setItalic(false).setFallback("sans-serif").build()
@@ -117,11 +132,11 @@ private object SelectedTypefaceLoader : AndroidFont.TypefaceLoader {
             }.getOrNull()
             if (face != null) return face
         }
-        return Typeface.create(Typeface.DEFAULT, weight, false)
+        return createWeightedTypeface(Typeface.DEFAULT, weight)
     }
 }
 
-/** Keep API 29-only types and their caches out of the loader used on Android 9. */
+/** Keep API 29-only types and their caches out of the loader used on Android 8–9. */
 @RequiresApi(Build.VERSION_CODES.Q)
 private object SelectedTypefaceApi29 {
     private val buffers = object : LruCache<String, PlatformFont>(32 * 1024 * 1024) {
@@ -130,9 +145,13 @@ private object SelectedTypefaceApi29 {
 
     // Access is serialized by SelectedTypefaceLoader's face-cache lock.
     fun build(context: Context, ids: List<String>, weight: Int): Typeface {
-        val families = ids.takeWhile { it != AppFont.System.id }.mapNotNull { id -> runCatching {
+        if (ids.firstOrNull() == AppFont.Monospace.id) {
+            return createWeightedTypeface(Typeface.MONOSPACE, weight)
+        }
+        val families = ids.takeWhile { it != AppFont.System.id && it != AppFont.Monospace.id }.mapNotNull { id -> runCatching {
             val base = buffers.get(id) ?: when (id) {
-                FontLibrary.Josefin -> PlatformFont.Builder(context.assets, PRIMARY_FONT_ASSET).build()
+                FontLibrary.Montserrat -> PlatformFont.Builder(context.assets, PRIMARY_FONT_ASSET).build()
+                FontLibrary.Josefin -> PlatformFont.Builder(context.assets, "fonts/josefin_sans.ttf").build()
                 AppFont.NotoSans.id -> PlatformFont.Builder(context.assets, "fonts/noto_sans.ttf").build()
                 AppFont.Sacramento.id -> PlatformFont.Builder(context.resources, R.font.sacramento).build()
                 AppFont.Bokor.id -> PlatformFont.Builder(context.resources, R.font.bokor).build()
@@ -142,7 +161,7 @@ private object SelectedTypefaceApi29 {
                 else -> ClockFontStore(context).file(id)?.let { PlatformFont.Builder(it).build() }
             }?.also { buffers.put(id, it) }
             base?.let {
-                val safeWeight = if (id == FontLibrary.Josefin) weight.coerceAtMost(700) else weight
+                val safeWeight = if (id == FontLibrary.Josefin || id == FontLibrary.Montserrat) weight.coerceAtMost(700) else weight
                 // Font.Builder(Font) is API 31; the shared-buffer constructor works on 29.
                 val font = PlatformFont.Builder(it.buffer).setTtcIndex(it.ttcIndex).setWeight(safeWeight)
                     .setSlant(PlatformFontStyle.FONT_SLANT_UPRIGHT)
@@ -150,7 +169,7 @@ private object SelectedTypefaceApi29 {
                 PlatformFontFamily.Builder(font).build()
             }
         }.getOrNull() }
-        if (families.isEmpty()) return Typeface.create(Typeface.DEFAULT, weight, false)
+        if (families.isEmpty()) return createWeightedTypeface(Typeface.DEFAULT, weight)
         val builder = Typeface.CustomFallbackBuilder(families.first())
         families.drop(1).take(Typeface.CustomFallbackBuilder.getMaxCustomFallbackCount() - 1).forEach(builder::addCustomFallback)
         return builder.setStyle(PlatformFontStyle(weight, PlatformFontStyle.FONT_SLANT_UPRIGHT))
@@ -176,22 +195,15 @@ private object LauncherTypefaceLoader : AndroidFont.TypefaceLoader {
         loadBlocking(context, font)
 }
 
-private const val PRIMARY_FONT_ASSET = "fonts/josefin_sans.ttf"
+private const val PRIMARY_FONT_ASSET = "fonts/montserrat.ttf"
 
 private val typefaces = mutableMapOf<Int, Typeface>()
 
 /**
  * Returns a cached real weight, shared by every launcher text surface.
- *
- * API 28 has no public custom per-glyph fallback-chain builder. It keeps the same
- * Josefin Sans variable weight and the device's sans-serif glyph fallback, which is not
- * guaranteed to be our bundled Noto files on OEM devices. No hidden APIs are used.
- *
- * Chinese, Japanese and Korean use Android's system sans-serif fallback.
- * Keep the text locale supplied by Compose so Android selects regional glyphs.
  */
 internal fun launcherTypeface(context: Context, weight: Int): Typeface {
-    require(weight in 100..700) { "Josefin Sans supports weights between 100 and 700" }
+    require(weight in 100..700) { "Primary launcher font supports weights between 100 and 700" }
     return synchronized(typefaces) {
         typefaces.getOrPut(weight) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -220,17 +232,12 @@ private object NotoFallbackApi29 {
         "fonts/noto_sans_thai.ttf",
     )
 
-    // Retain each bundled font's native backing buffer once. All weight
-    // instances reuse that buffer instead of re-reading files.
-    // Access is serialized by the outer typeface cache lock.
     private val baseFonts = mutableMapOf<String, PlatformFont>()
 
     private fun family(context: Context, asset: String, weight: Int): PlatformFontFamily {
         val base = baseFonts.getOrPut(asset) {
             PlatformFont.Builder(context.assets, asset).build()
         }
-        // The Font copy-builder needs API 31. The public buffer constructor also
-        // shares font data and works on every API level supporting custom fallback.
         val font = PlatformFont.Builder(base.buffer)
             .setTtcIndex(base.ttcIndex)
             .setFontVariationSettings("'wght' $weight")
@@ -247,7 +254,6 @@ private object NotoFallbackApi29 {
         }
         return builder
             .setStyle(PlatformFontStyle(weight, PlatformFontStyle.FONT_SLANT_UPRIGHT))
-            // CJK, emoji and scripts beyond the packaged Noto families use the OS.
             .setSystemFallback("sans-serif")
             .build()
     }

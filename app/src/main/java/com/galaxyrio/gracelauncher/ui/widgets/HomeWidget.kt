@@ -30,7 +30,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.HomeLayout
 import com.galaxyrio.gracelauncher.platform.HomeWidgetHost
 import com.galaxyrio.gracelauncher.platform.HomeWidgetHostView

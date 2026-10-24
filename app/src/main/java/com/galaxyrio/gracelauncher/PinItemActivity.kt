@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher
 
+import com.tailfin.launcher.R
+
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle

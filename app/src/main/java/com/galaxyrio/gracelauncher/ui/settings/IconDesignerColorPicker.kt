@@ -31,7 +31,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.IconColor
 import com.galaxyrio.gracelauncher.data.IconColorSource
 import java.util.Locale

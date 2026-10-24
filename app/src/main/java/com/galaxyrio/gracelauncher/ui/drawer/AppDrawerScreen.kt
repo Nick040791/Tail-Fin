@@ -45,7 +45,7 @@ import com.galaxyrio.gracelauncher.data.LauncherApp
 import com.galaxyrio.gracelauncher.data.LauncherFolder
 import com.galaxyrio.gracelauncher.data.PrivateSpaceFolderId
 import com.galaxyrio.gracelauncher.data.notifications.AppNotification
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.ui.components.AppRowGestures
 import com.galaxyrio.gracelauncher.ui.components.LauncherAppRow
 import com.galaxyrio.gracelauncher.ui.components.FolderRow

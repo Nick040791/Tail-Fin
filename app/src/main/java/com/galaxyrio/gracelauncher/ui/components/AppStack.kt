@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.*
 import com.galaxyrio.gracelauncher.ui.LauncherUiState
 import com.galaxyrio.gracelauncher.ui.theme.LocalLauncherAppearance

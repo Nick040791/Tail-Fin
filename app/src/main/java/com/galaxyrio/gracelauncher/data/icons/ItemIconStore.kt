@@ -9,7 +9,7 @@ import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.Drawable
 import android.content.pm.LauncherApps
 import androidx.core.content.ContextCompat
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build

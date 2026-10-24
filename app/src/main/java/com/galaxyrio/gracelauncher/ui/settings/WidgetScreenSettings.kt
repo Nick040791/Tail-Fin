@@ -2,7 +2,7 @@ package com.galaxyrio.gracelauncher.ui.settings
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.ui.LauncherActions
 import com.galaxyrio.gracelauncher.ui.LauncherUiState
 

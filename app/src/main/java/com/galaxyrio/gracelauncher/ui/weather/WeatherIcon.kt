@@ -15,7 +15,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.weather.WeatherCondition
 
 /** Local Material Symbols Outlined artwork; day/night follows the forecast, tint follows the UI. */

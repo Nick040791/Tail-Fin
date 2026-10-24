@@ -27,7 +27,8 @@ internal object GraceSystemActions {
         GraceButtonAction.Website -> target.url?.let(::websiteUri)?.let { uri ->
             open(context, Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE))
         } ?: false
-        GraceButtonAction.Assistant -> open(context, Intent(Intent.ACTION_ASSIST)) ||
+        GraceButtonAction.Assistant -> com.tailfin.launcher.ecosystem.NativeEcosystemManager.launchDicioAssistant(context) ||
+            open(context, Intent(Intent.ACTION_ASSIST)) ||
             open(context, Intent(Intent.ACTION_VOICE_COMMAND))
         GraceButtonAction.LockScreen, GraceButtonAction.Notifications, GraceButtonAction.QuickSettings ->
             performGlobalSystemAction(target.action, preferNonAccessibility,
@@ -71,7 +72,10 @@ class GraceAccessibilityService : AccessibilityService() {
 
         internal fun perform(action: GraceButtonAction): Boolean {
             val id = when (action) {
-                GraceButtonAction.LockScreen -> GLOBAL_ACTION_LOCK_SCREEN // API 28, our minimum.
+                GraceButtonAction.LockScreen -> {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) GLOBAL_ACTION_LOCK_SCREEN
+                    else return false
+                }
                 GraceButtonAction.Notifications -> GLOBAL_ACTION_NOTIFICATIONS
                 GraceButtonAction.QuickSettings -> GLOBAL_ACTION_QUICK_SETTINGS
                 else -> return false

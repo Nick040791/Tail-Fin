@@ -1,29 +1,46 @@
+# Android & Gradle build outputs
 *.iml
-.gradle
+.gradle/
 .kotlin/
 local.properties
+/build/
+**/build/
+/captures/
+.externalNativeBuild/
+.cxx/
 
-# Keep shared IDE formatting and inspections, not generated or machine-local state.
+# Keep shared IDE formatting and inspections, not generated or machine-local state
 /.idea/*
 !/.idea/codeStyles/
 !/.idea/inspectionProfiles/
+.vscode/
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+Thumbs.db
+*.swp
+*~
 
-# Local maintainer notes and submission drafts
+# Local maintainer notes, plans, and submission drafts
 /.local/
+docs/*
 
-# Local release artifacts and signing secrets
+# Local FOSS APK staging and bundled APK binaries (distributed via GitHub Releases)
+/Integrated-Apps/
+/app/src/main/assets/apks/
 /app/release/
 *.apk
+*.ap_
 *.aab
 *.idsig
+*.dex
+
+# Signing secrets and environment vault files
 *.jks
 *.keystore
 *.p12
 *.pfx
 keystore.properties
 signing.properties
+.env
+.env.*
+!.env.example
+

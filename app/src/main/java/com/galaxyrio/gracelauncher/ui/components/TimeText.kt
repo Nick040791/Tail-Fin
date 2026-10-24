@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.res.stringResource
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.CountdownUnit
 import com.galaxyrio.gracelauncher.data.ScheduleEvent
 import com.galaxyrio.gracelauncher.data.eventCountdown

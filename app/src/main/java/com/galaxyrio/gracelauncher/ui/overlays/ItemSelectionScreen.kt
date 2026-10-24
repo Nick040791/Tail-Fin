@@ -29,7 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.*
 import com.galaxyrio.gracelauncher.ui.LauncherActions
 import com.galaxyrio.gracelauncher.ui.LauncherUiState

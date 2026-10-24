@@ -29,6 +29,13 @@ internal object SearchLauncher {
     fun internet(context: Context, query: String, settings: SearchSettings): Boolean {
         val uri = internetUri(query, settings) ?: return false
         val intent = Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
+        // Prefer Chromium (org.chromium.chrome) when installed in the TailFin ecosystem.
+        val chromiumPkg = com.tailfin.launcher.ecosystem.NativeEcosystemManager.PKG_CHROMIUM
+        if (com.tailfin.launcher.ecosystem.NativeEcosystemManager.isPackageInstalled(context, chromiumPkg)) {
+            intent.setPackage(chromiumPkg)
+            if (open(context, intent)) return true
+            intent.setPackage(null)
+        }
         // Resolve a generic HTTPS link first so a search engine's app link cannot
         // replace the default browser. Resolution is local; this URL is never opened.
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://example.com")).addCategory(Intent.CATEGORY_BROWSABLE)

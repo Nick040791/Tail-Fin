@@ -31,7 +31,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.GraceButtonAlignment
 import com.galaxyrio.gracelauncher.data.GraceButtonLayout
 import com.galaxyrio.gracelauncher.data.GraceButtonVisibility

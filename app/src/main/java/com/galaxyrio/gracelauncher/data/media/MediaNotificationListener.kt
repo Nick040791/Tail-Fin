@@ -9,6 +9,7 @@ import android.service.notification.StatusBarNotification
 import androidx.annotation.MainThread
 import com.galaxyrio.gracelauncher.data.notifications.appNotifications
 import com.galaxyrio.gracelauncher.data.notifications.AppNotificationRanking
+import com.tailfin.launcher.notifications.DistractionFilterService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -68,7 +69,8 @@ class MediaNotificationListener : NotificationListenerService() {
         try {
             val notifications = activeNotifications.orEmpty().toList()
             mediaNotifications.connected(notifications)
-            appNotifications.connected(notifications, appRanking(currentRanking)) { key -> runCatching { cancelNotification(key) }.isSuccess }
+            val filtered = notifications.filter { DistractionFilterService.shouldAllowStatusBarNotification(this, it) }
+            appNotifications.connected(filtered, appRanking(currentRanking)) { key -> runCatching { cancelNotification(key) }.isSuccess }
         } catch (_: RuntimeException) {
             mediaNotifications.disconnected()
             appNotifications.disconnected()
@@ -77,6 +79,10 @@ class MediaNotificationListener : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification, rankingMap: RankingMap) {
         mediaNotifications.posted(sbn)
+        if (!DistractionFilterService.shouldAllowStatusBarNotification(this, sbn)) {
+            appNotifications.removed(sbn.key)
+            return
+        }
         // Publish content and its ranking together, without a transient normal/silent flash.
         appNotifications.posted(sbn, appRanking(rankingMap))
     }

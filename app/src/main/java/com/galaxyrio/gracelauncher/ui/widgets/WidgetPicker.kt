@@ -30,7 +30,7 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.ui.settings.LocalSettingsBottomInset
 import com.galaxyrio.gracelauncher.data.AppRepository
 import com.galaxyrio.gracelauncher.data.LauncherApp

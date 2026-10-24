@@ -5,7 +5,8 @@ import com.materialkolor.PaletteStyle
 enum class ThemeMode { System, Light, Dark }
 
 enum class AppFont(val id: String?) {
-    Default(null), System("system"), NotoSans("noto_sans"), Sacramento("sacramento"),
+    Default(null), Montserrat("montserrat"), System("system"), Monospace("monospace"),
+    NotoSans("noto_sans"), Sacramento("sacramento"),
     Bokor("bokor"), Plaster("plaster"), Monoton("monoton"), LuckiestGuy("luckiest_guy"),
 }
 

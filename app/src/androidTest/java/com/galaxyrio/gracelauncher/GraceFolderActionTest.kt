@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher
 
+import com.tailfin.launcher.R
+
 import android.content.ComponentName
 import androidx.compose.runtime.*
 import androidx.compose.ui.semantics.Role

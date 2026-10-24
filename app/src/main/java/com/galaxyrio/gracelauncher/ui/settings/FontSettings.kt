@@ -38,7 +38,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.*
 import com.galaxyrio.gracelauncher.ui.LauncherActions
 import com.galaxyrio.gracelauncher.ui.LauncherUiState
@@ -54,8 +54,10 @@ import kotlinx.coroutines.launch
 @Composable
 internal fun appFontLabel(id: String?): String = when (id) {
     null -> stringResource(R.string.font_follow_manager)
+    FontLibrary.Montserrat -> stringResource(R.string.font_montserrat)
     FontLibrary.Josefin -> stringResource(R.string.font_josefin)
     AppFont.System.id -> stringResource(R.string.font_system)
+    AppFont.Monospace.id -> stringResource(R.string.font_monospace)
     AppFont.NotoSans.id -> stringResource(R.string.font_noto_sans)
     AppFont.Sacramento.id -> stringResource(R.string.clock_sacramento)
     AppFont.Bokor.id -> stringResource(R.string.clock_bokor)
@@ -181,6 +183,32 @@ internal fun FontSettings(uiState: LauncherUiState, actions: LauncherActions, on
                 contentPadding = PaddingValues(start = 16.dp, end = 24.dp, bottom = 24.dp + LocalSettingsBottomInset.current),
                 userScrollEnabled = reorder.draggingKey == null) {
                 item("settings") {
+                    val prefs = remember(context) { LauncherPreferences(context) }
+                    var selectedPref by remember { mutableStateOf(prefs.fontFamilyPreference) }
+                    SettingsHeading("TailFin Primary Font (pref_font_family)")
+                    TailFinFontPreference.entries.forEachIndexed { idx, option ->
+                        SettingsToggleItem(
+                            title = option.displayName,
+                            summary = null,
+                            checked = selectedPref == option,
+                            index = idx,
+                            count = TailFinFontPreference.entries.size,
+                            tag = "pref_font_family_${option.name.lowercase()}",
+                            enabled = enabled,
+                        ) {
+                            selectedPref = option
+                            prefs.setFontFamilyPreference(option)
+                            val targetFontId = when (option) {
+                                TailFinFontPreference.Montserrat -> FontLibrary.Montserrat
+                                TailFinFontPreference.SystemSans -> AppFont.System.id ?: "system"
+                                TailFinFontPreference.Monospace -> AppFont.Monospace.id ?: "monospace"
+                            }
+                            actions.updateSettings {
+                                it.copy(fontLibrary = FontLibrary(selected = listOf(targetFontId), unselected = (available - targetFontId)))
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
                     SettingsToggleItem(stringResource(R.string.font_apply_settings), stringResource(R.string.font_apply_settings_summary),
                         uiState.settings.applyFontToSettings, 0, 1, "apply_font_to_settings", enabled = enabled) { value ->
                         actions.updateSettings { it.copy(applyFontToSettings = value) }

@@ -5,6 +5,20 @@ import androidx.core.content.edit
 
 enum class WallpaperTextMode { Auto, Light, Dark }
 
+enum class TailFinFontPreference(val prefValue: String, val displayName: String) {
+    Montserrat("Montserrat", "Montserrat (Default)"),
+    SystemSans("System Sans-Serif", "System Sans-Serif"),
+    Monospace("Monospace", "Monospace");
+
+    companion object {
+        const val KEY_PREF_FONT_FAMILY = "pref_font_family"
+
+        fun fromValue(value: String?): TailFinFontPreference =
+            entries.firstOrNull { it.prefValue.equals(value, ignoreCase = true) || it.name.equals(value, ignoreCase = true) }
+                ?: Montserrat
+    }
+}
+
 /** Small, local-only preferences; app keys are flattened activity component names. */
 class LauncherPreferences(context: Context) {
     private val preferences = context.getSharedPreferences("launcher_appearance", Context.MODE_PRIVATE)
@@ -14,6 +28,15 @@ class LauncherPreferences(context: Context) {
             ?: WallpaperTextMode.Auto
 
     val themedIcons: Boolean get() = preferences.getBoolean("themed_icons", false)
+
+    val fontFamilyPreference: TailFinFontPreference
+        get() = TailFinFontPreference.fromValue(
+            preferences.getString(TailFinFontPreference.KEY_PREF_FONT_FAMILY, TailFinFontPreference.Montserrat.prefValue)
+        )
+
+    fun setFontFamilyPreference(pref: TailFinFontPreference) = preferences.edit {
+        putString(TailFinFontPreference.KEY_PREF_FONT_FAMILY, pref.prefValue)
+    }
 
     fun textMode(mode: WallpaperTextMode) = preferences.edit { putString("text_mode", mode.name) }
     fun themedIcons(enabled: Boolean) = preferences.edit { putBoolean("themed_icons", enabled) }

@@ -5,7 +5,7 @@ import android.content.Context
 import android.graphics.Canvas
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.IconDesign
 import com.galaxyrio.gracelauncher.data.IconShape
 import com.galaxyrio.gracelauncher.data.ItemIcon

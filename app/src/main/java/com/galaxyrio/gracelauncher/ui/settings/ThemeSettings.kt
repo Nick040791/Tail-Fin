@@ -42,7 +42,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.ThemeMode
 import com.galaxyrio.gracelauncher.data.WallpaperTextMode
 import com.galaxyrio.gracelauncher.data.icons.IconPackStatus
@@ -372,4 +372,5 @@ private fun WallpaperTextMode.label(): String = stringResource(when (this) {
 internal val AccentColors = listOf(
     Color(0xFF6750A4), Color(0xFFB3261E), Color(0xFFE27C33), Color(0xFF7D5260), Color(0xFF3F51B5),
     Color(0xFF009688), Color(0xFF4CAF50), Color(0xFFF9A825), Color(0xFF0288D1), Color(0xFFC2185B),
+    Color(0xFFD92B38), Color(0xFF1B4D5C), Color(0xFFC5C8CE), Color(0xFF4D1015), Color(0xFF1C2026),
 )

@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher
 
+import com.tailfin.launcher.R
+
 import com.galaxyrio.gracelauncher.data.weather.WeatherCondition
 import com.galaxyrio.gracelauncher.ui.weather.weatherIconResource
 import org.junit.Assert.assertEquals

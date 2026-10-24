@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher.ui
 
+import com.tailfin.launcher.R
+
 import android.Manifest
 import android.app.Application
 import android.content.BroadcastReceiver
@@ -574,7 +576,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                     // Keep this virtual folder out of the editable folder table, but
                     // render its saved icon through the same item-icon pipeline.
                     val recentFolder = LauncherFolder(RecentlyInstalledFolderId,
-                        getApplication<Application>().getString(com.galaxyrio.gracelauncher.R.string.recently_installed),
+                        getApplication<Application>().getString(com.tailfin.launcher.R.string.recently_installed),
                         emptyList(), FolderPlacement.AppList)
                     val folderApps = (_uiState.value.folders + recentFolder).map { folder ->
                         decorate(folder.asApp())

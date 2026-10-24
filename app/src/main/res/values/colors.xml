@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Core Orca Surfaces -->
+    <color name="tailfin_void_black">#000000</color>
+    <color name="tailfin_orca_surface">#0D0F12</color>
+    <color name="tailfin_orca_gray">#1C2026</color>
+    <color name="tailfin_orca_border">#2E343E</color>
+
+    <!-- Metallic Silver & Text -->
+    <color name="tailfin_metallic_silver">#C5C8CE</color>
+    <color name="tailfin_text_primary">#ECEFF4</color>
+    <color name="tailfin_text_muted">#7B8390</color>
+
+    <!-- Accents -->
+    <color name="tailfin_ambient_red">#D92B38</color>
+    <color name="tailfin_ambient_red_dim">#4D1015</color>
+    <color name="tailfin_scale_teal">#1B4D5C</color>
+
     <!-- Full-colour app icon; monochrome artwork is tinted by the system or UI. -->
-    <color name="launcher_icon_background">#6865A8</color>
-    <color name="launcher_icon_foreground">#FFEDC2</color>
+    <color name="launcher_icon_background">#000000</color>
+    <color name="launcher_icon_foreground">#C5C8CE</color>
 </resources>

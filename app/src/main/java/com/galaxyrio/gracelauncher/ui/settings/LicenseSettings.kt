@@ -34,7 +34,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.licenses.LibraryLicense
 import com.galaxyrio.gracelauncher.data.licenses.LicensesRepository
 import com.galaxyrio.gracelauncher.ui.components.LauncherIcon

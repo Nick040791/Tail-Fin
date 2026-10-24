@@ -51,7 +51,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 
 internal data class SettingsStorageState(val loading: Boolean = false, val loadFailed: Boolean = false, val saveFailed: Boolean = false) {
     val canEdit: Boolean get() = !loading && !loadFailed

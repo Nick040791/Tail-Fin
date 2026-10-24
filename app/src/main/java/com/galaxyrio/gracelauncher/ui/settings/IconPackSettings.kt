@@ -32,7 +32,7 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.icons.IconPackInfo
 import com.galaxyrio.gracelauncher.data.SearchNames
 import com.galaxyrio.gracelauncher.data.SearchQuery

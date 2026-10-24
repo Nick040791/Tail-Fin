@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 
 enum class LauncherSymbol {
     Star, Info, Hourglass, Category, Delete, Chevron, Settings, Launch, Outbound, Android,

@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.*
 import com.galaxyrio.gracelauncher.platform.SearchLauncher
 import com.galaxyrio.gracelauncher.ui.LauncherActions

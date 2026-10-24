@@ -15,7 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.ShortcutsFoldersSettings
 import com.galaxyrio.gracelauncher.data.GraceButtonSettings
 import com.galaxyrio.gracelauncher.ui.LauncherActions

@@ -34,7 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.IconDesign
 import com.galaxyrio.gracelauncher.data.IconDisplaySettings
 import com.galaxyrio.gracelauncher.data.IconDisplayStyle

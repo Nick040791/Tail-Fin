@@ -1,7 +1,7 @@
 package com.galaxyrio.gracelauncher.data.licenses
 
 import android.content.Context
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.util.withJson
 import kotlinx.coroutines.Dispatchers

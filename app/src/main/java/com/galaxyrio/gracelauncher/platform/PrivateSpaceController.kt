@@ -19,7 +19,7 @@ import android.os.UserManager
 import android.provider.Settings
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.ProfileSettings
 import com.galaxyrio.gracelauncher.data.PrivateSpaceDisplay
 import kotlinx.coroutines.flow.MutableStateFlow

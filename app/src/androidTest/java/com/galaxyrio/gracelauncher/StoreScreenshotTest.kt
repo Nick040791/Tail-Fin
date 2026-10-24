@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher
 
+import com.tailfin.launcher.R
+
 import android.app.WallpaperManager
 import android.appwidget.AppWidgetManager
 import android.graphics.Bitmap

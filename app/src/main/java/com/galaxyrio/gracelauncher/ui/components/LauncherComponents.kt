@@ -73,7 +73,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.res.stringResource
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.ShortcutsFoldersSettings
 import com.galaxyrio.gracelauncher.data.IconDisplaySettings
 import com.galaxyrio.gracelauncher.data.IconDisplayStyle

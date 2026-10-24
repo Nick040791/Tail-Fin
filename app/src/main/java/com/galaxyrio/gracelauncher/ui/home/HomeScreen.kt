@@ -60,6 +60,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -83,7 +84,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.LauncherApp
 import com.galaxyrio.gracelauncher.data.LauncherFolder
 import com.galaxyrio.gracelauncher.data.ScheduleEvent
@@ -416,6 +417,27 @@ fun HomeScreen(
             }, onFinished = { onTopOffsetChange(topOffset) },
             modifier = Modifier.padding(start = uiState.settings.listAppearance.startPadding, end = uiState.settings.listAppearance.endPadding)
                 .offset(y = (if (baselineIndex >= 0) baselineTop else resolvedTop) - 20.dp))
+
+        var showSshTerminal by rememberSaveable { mutableStateOf(false) }
+        if (!editingLayout && !widgetEditing) {
+            com.tailfin.launcher.ui.TailFinHomeStatusPillBar(
+                onOpenSshTerminal = { showSshTerminal = true },
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(
+                        start = uiState.settings.listAppearance.startPadding,
+                        end = 72.dp,
+                        bottom = bottomInset + 12.dp,
+                    ),
+            )
+        }
+        if (showSshTerminal) {
+            Box(Modifier.fillMaxSize().zIndex(10f)) {
+                com.tailfin.launcher.terminal.SshTerminalDrawer(
+                    onClose = { showSshTerminal = false },
+                )
+            }
+        }
     }
 }
 

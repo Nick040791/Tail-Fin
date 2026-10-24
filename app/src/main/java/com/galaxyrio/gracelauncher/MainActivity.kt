@@ -44,6 +44,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        com.tailfin.launcher.devmode.DeveloperModeEnforcer.verifyAndPrompt(this)
+        com.tailfin.launcher.memory.MemoryOptimizer.optimizeIfNeeded(this)
         launcherViewModel.refreshOnResume()
         launcherViewModel.refreshSchedule()
     }

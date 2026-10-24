@@ -17,7 +17,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.DigitalWellbeingSettings
 import com.galaxyrio.gracelauncher.data.UsageDisplay
 import com.galaxyrio.gracelauncher.data.UsageRefresh

@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher.data
 
+import com.tailfin.launcher.R
+
 import android.content.res.Resources
 import android.os.Build
 import androidx.compose.ui.graphics.Color

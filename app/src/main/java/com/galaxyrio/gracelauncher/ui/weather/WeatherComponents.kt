@@ -50,7 +50,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.weather.WeatherCondition
 import com.galaxyrio.gracelauncher.data.weather.WeatherCurrent
 import com.galaxyrio.gracelauncher.data.weather.WeatherDay

@@ -85,7 +85,13 @@ class ClockFontStore(context: Context) {
         synchronized(cache) { cache.get(key)?.typeface } ?: runCatching {
             Typeface.Builder(file).setFontVariationSettings("'wght' $weight")
                 .setWeight(weight).setItalic(false).setFallback("sans-serif").build()
-                ?.let { Typeface.create(it, weight, false) }
+                ?.let {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                        Typeface.create(it, weight, false)
+                    } else {
+                        Typeface.create(it, if (weight >= 600) Typeface.BOLD else Typeface.NORMAL)
+                    }
+                }
         }.getOrNull()?.also { synchronized(cache) { cache.put(key, CachedTypeface(it, file.length().toInt().coerceAtLeast(1))) } }
     }
 

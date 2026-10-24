@@ -98,7 +98,7 @@
     <string name="private_space_unlock_edit">Unlock to edit</string>
     <string name="private_space_lock">Lock Private space</string>
     <!-- Core -->
-    <string name="app_name">Grace Launcher</string>
+    <string name="app_name">TailFin</string>
     <string name="alphabet_scroller">Alphabet quick scroll</string>
     <string name="back_home">Back to home</string>
     <string name="jump_to_letter">Apps starting with %1$s</string>
@@ -160,7 +160,7 @@
     <string name="package_name_copied">Copied</string>
     <string name="choose_app_store">Choose app store</string>
     <string name="app_store_unavailable">No app store can open this app’s page.</string>
-    <string name="grace_settings">Grace settings</string>
+    <string name="grace_settings">TailFin settings</string>
     <string name="done">Done</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
@@ -675,7 +675,12 @@
     <string name="pin_item_expired">This request is no longer available. Please try again from the app.</string>
     <string name="pin_item_error">Couldn’t add this shortcut. Please try again.</string>
     <!-- Font library and favorites/app-list appearance -->
+    <string name="font_montserrat" translatable="false">Montserrat</string>
+    <string name="font_monospace" translatable="false">Monospace</string>
     <string name="font_josefin" translatable="false">Josefin Sans</string>
+    <string name="perm_read_env_vault">Allows trusted local applications to read encrypted TailFin .env variables and API keys.</string>
+    <string name="tailfin_hub_title">TailFin Control Center</string>
+    <string name="tailfin_hub_summary">FOSS Ecosystem, .env Vault, SSH Terminal, Memory &amp; Security</string>
     <string name="font_follow_manager">Default · Font manager</string>
     <string name="font_add">Add font</string>
     <string name="font_all">All fonts</string>

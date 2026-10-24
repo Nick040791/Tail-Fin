@@ -33,7 +33,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.IconColor
 import com.galaxyrio.gracelauncher.data.IconDesign
 import com.galaxyrio.gracelauncher.data.IconDisplaySettings

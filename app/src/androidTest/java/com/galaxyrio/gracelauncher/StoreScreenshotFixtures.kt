@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher
 
+import com.tailfin.launcher.R
+
 import android.app.Instrumentation
 import android.content.Context
 import android.graphics.BitmapFactory

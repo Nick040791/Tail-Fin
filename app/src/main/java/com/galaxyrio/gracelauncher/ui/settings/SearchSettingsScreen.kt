@@ -30,7 +30,7 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.SearchContacts
 import com.galaxyrio.gracelauncher.data.SearchEngine
 import com.galaxyrio.gracelauncher.data.SearchSettings

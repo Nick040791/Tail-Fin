@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher
 
+import com.tailfin.launcher.R
+
 import android.Manifest
 import android.app.ActivityOptions
 import android.app.Notification

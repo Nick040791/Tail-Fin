@@ -44,7 +44,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.ClockFaceStyle
 import com.galaxyrio.gracelauncher.data.ClockFontFile
 import com.galaxyrio.gracelauncher.data.ClockFontStore

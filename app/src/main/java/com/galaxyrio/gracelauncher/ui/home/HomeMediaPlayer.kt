@@ -44,7 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.media.MediaCommand
 import com.galaxyrio.gracelauncher.data.media.NowPlaying
 import com.galaxyrio.gracelauncher.ui.components.LocalLauncherInputEnabled

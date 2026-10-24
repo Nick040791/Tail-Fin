@@ -41,7 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.zIndex
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.IconDisplayStyle
 import com.galaxyrio.gracelauncher.data.HomeLayout
 import com.galaxyrio.gracelauncher.data.LauncherApp

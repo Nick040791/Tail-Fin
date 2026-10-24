@@ -13,7 +13,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.NotificationDisplay
 import com.galaxyrio.gracelauncher.data.ShortcutsFoldersSettings
 import com.galaxyrio.gracelauncher.ui.LauncherActions

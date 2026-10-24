@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher
 
+import com.tailfin.launcher.R
+
 import android.app.role.RoleManager
 import android.content.Intent
 import android.content.pm.PackageManager

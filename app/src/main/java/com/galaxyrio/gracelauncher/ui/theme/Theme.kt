@@ -17,46 +17,66 @@ import com.galaxyrio.gracelauncher.data.FontLibrary
 import com.galaxyrio.gracelauncher.data.launcherThemeSeed
 import com.galaxyrio.gracelauncher.data.launcherColorScheme
 
-val Ink = Color(0xFF071A19)
-val DeepTeal = Color(0xFF123B37)
-val Mint = Color(0xFF8BE0CA)
-val MintContainer = Color(0xFF1D514A)
-val Coral = Color(0xFFFFB3A7)
-val Moon = Color(0xFFF2FAF7)
-val Mist = Color(0xFFB7CBC5)
+// Core Orca Surfaces
+val TailFinVoidBlack = Color(0xFF000000)
+val TailFinOrcaSurface = Color(0xFF0D0F12)
+val TailFinOrcaGray = Color(0xFF1C2026)
+val TailFinOrcaBorder = Color(0xFF2E343E)
+
+// Metallic Silver & Text
+val TailFinMetallicSilver = Color(0xFFC5C8CE)
+val TailFinTextPrimary = Color(0xFFECEFF4)
+val TailFinTextMuted = Color(0xFF7B8390)
+
+// Accents
+val TailFinAmbientRed = Color(0xFFD92B38)
+val TailFinAmbientRedDim = Color(0xFF4D1015)
+val TailFinScaleTeal = Color(0xFF1B4D5C)
+
+// Legacy aliases
+val Ink = TailFinOrcaSurface
+val DeepTeal = TailFinScaleTeal
+val Mint = TailFinMetallicSilver
+val MintContainer = TailFinOrcaGray
+val Coral = TailFinAmbientRed
+val Moon = TailFinTextPrimary
+val Mist = TailFinTextMuted
 
 val Paper = Color(0xFFF4FBF8)
-val Forest = Color(0xFF0A6257)
-val PaleMint = Color(0xFFA8F2DE)
-val Rose = Color(0xFF8E4A43)
+val Forest = Color(0xFF1B4D5C)
+val PaleMint = Color(0xFFC5C8CE)
+val Rose = Color(0xFFD92B38)
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Mint,
-    onPrimary = Ink,
-    primaryContainer = MintContainer,
-    onPrimaryContainer = Moon,
-    secondary = PaleMint,
-    onSecondary = Ink,
-    tertiary = Coral,
-    background = Ink,
-    onBackground = Moon,
-    surface = Ink,
-    onSurface = Moon,
-    surfaceVariant = DeepTeal,
-    onSurfaceVariant = Mist,
+    primary = TailFinMetallicSilver,
+    onPrimary = TailFinVoidBlack,
+    primaryContainer = TailFinScaleTeal,
+    onPrimaryContainer = TailFinTextPrimary,
+    secondary = TailFinAmbientRed,
+    onSecondary = TailFinTextPrimary,
+    secondaryContainer = TailFinAmbientRedDim,
+    onSecondaryContainer = TailFinTextPrimary,
+    tertiary = TailFinScaleTeal,
+    background = TailFinVoidBlack,
+    onBackground = TailFinTextPrimary,
+    surface = TailFinOrcaSurface,
+    onSurface = TailFinTextPrimary,
+    surfaceVariant = TailFinOrcaGray,
+    onSurfaceVariant = TailFinTextMuted,
+    outline = TailFinOrcaBorder,
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = Forest,
     onPrimary = Paper,
     primaryContainer = PaleMint,
-    onPrimaryContainer = Ink,
+    onPrimaryContainer = TailFinVoidBlack,
     secondary = DeepTeal,
     tertiary = Rose,
     background = Paper,
-    onBackground = Ink,
+    onBackground = TailFinVoidBlack,
     surface = Paper,
-    onSurface = Ink,
+    onSurface = TailFinVoidBlack,
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -71,7 +91,7 @@ fun GraceLauncherTheme(
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (seedColor != null || (dynamicColor && Build.VERSION.SDK_INT >= 31)) {
-        val seed = launcherThemeSeed(LocalResources.current, dynamicColor, seedColor?.toArgb() ?: 0xFF6750A4.toInt())
+        val seed = launcherThemeSeed(LocalResources.current, dynamicColor, seedColor?.toArgb() ?: 0xFFD92B38.toInt())
         remember(seed, darkTheme, paletteStyle) { launcherColorScheme(seed, darkTheme, paletteStyle) }
     } else if (darkTheme) DarkColorScheme else LightColorScheme
 
@@ -83,8 +103,8 @@ fun GraceLauncherTheme(
         surface = Color.Black,
         surfaceDim = Color.Black,
         surfaceContainerLowest = Color.Black,
-        surfaceContainerLow = Color.Black,
-        surfaceContainer = Color.Black,
+        surfaceContainerLow = TailFinOrcaSurface,
+        surfaceContainer = TailFinOrcaSurface,
     ) else colorScheme
 
     val family = rememberAppFontFamily(null, fontLibrary)

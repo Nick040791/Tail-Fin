@@ -7,16 +7,16 @@ plugins {
 }
 
 android {
-    namespace = "com.galaxyrio.gracelauncher"
+    namespace = "com.tailfin.launcher"
     compileSdk = 37
     buildToolsVersion = "36.1.0"
 
     defaultConfig {
-        applicationId = "com.galaxyrio.gracelauncher"
-        minSdk = 28
-        targetSdk = 37
-        versionCode = 13
-        versionName = "1.2.1"
+        applicationId = "com.tailfin.launcher"
+        minSdk = 26 // Android 8.0+ support (compatible with Android 11 Moto G Power 2021)
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0.0-tailfin"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,16 +29,16 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
     }
     androidResources {
-        // Map bundled fonts directly; variable weights share the same native
-        // font buffer instead of inflating separate copies on the UI thread.
-        noCompress += "ttf"
+        // Map bundled fonts and APKs directly without recompression overhead.
+        noCompress += listOf("ttf", "apk")
     }
     dependenciesInfo {
         // Disables dependency metadata when building APKs.
@@ -58,6 +58,21 @@ room {
 }
 
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
+
+    // Shizuku API for privileged memory sweeps & silent APK installation
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
+
+    // AndroidX Security Crypto for hardware-backed .env storage
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // JSch (Modern fork) for the integrated SSH terminal client
+    implementation("com.github.mwiede:jsch:0.2.19")
+
+    // AppCompat for native AlertDialog prompts
+    implementation(libs.androidx.appcompat)
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.animation)

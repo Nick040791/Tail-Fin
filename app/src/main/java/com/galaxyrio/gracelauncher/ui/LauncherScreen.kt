@@ -86,7 +86,7 @@ import androidx.lifecycle.withResumed
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.net.toUri
 import androidx.core.content.ContextCompat
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.MainActivity
 import com.galaxyrio.gracelauncher.WidgetSetupActivity
 import com.galaxyrio.gracelauncher.data.LauncherApp

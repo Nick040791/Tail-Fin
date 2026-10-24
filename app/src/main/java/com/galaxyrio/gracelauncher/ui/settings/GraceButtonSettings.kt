@@ -22,7 +22,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.GraceButtonAction
 import com.galaxyrio.gracelauncher.data.GraceButtonGesture
 import com.galaxyrio.gracelauncher.data.GraceButtonTarget

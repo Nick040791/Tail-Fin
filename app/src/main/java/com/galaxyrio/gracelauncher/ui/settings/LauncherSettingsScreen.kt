@@ -55,7 +55,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.LauncherApp
 import com.galaxyrio.gracelauncher.data.icons.GraceButtonIcon
 import com.galaxyrio.gracelauncher.data.GraceButtonAction
@@ -79,7 +79,7 @@ internal enum class SettingsPage {
     MediaPlayer, GraceButton, GraceAction, GraceApp, GraceShortcut, GraceFolder, Gestures, WorkProfile, WorkProfileEditor,
     LabGraceButton, LabGesture, LabPopup, LabAccessibility, LabDismiss, Fonts, ListAppearance, Alphabet, ShortcutsFolders, AppStacks,
     GraceButtonAppearance, GraceButtonPosition, CalendarAppearance, WeatherAppearance, MediaPlayerAppearance,
-    WidgetScreen, WidgetScreenEditor, Homepage, DigitalWellbeing,
+    WidgetScreen, WidgetScreenEditor, Homepage, DigitalWellbeing, TailFinHub,
 }
 
 /** Navigation owns each page's saved state and seekable predictive-back transition. */
@@ -343,6 +343,7 @@ fun LauncherSettingsScreen(
                     SettingsPage.Changelog -> ChangelogSettings(back)
                     SettingsPage.Licenses -> LicenseSettings(back, navigate)
                     SettingsPage.AppLicense -> AppLicenseSettings(back)
+                    SettingsPage.TailFinHub -> com.tailfin.launcher.ui.TailFinHubScreen(onBack = back)
                 }
             }
         }
@@ -365,6 +366,7 @@ private fun SettingsHome(
         SettingsPage.Themes to LauncherSymbol.Palette,
         SettingsPage.Advanced to LauncherSymbol.Settings,
         SettingsPage.About to LauncherSymbol.Info,
+        SettingsPage.TailFinHub to LauncherSymbol.Encrypted,
     )
     SettingsScaffold(stringResource(R.string.settings_title), "settings_root", onBack) { padding ->
         SettingsList(padding) {
@@ -379,12 +381,14 @@ private fun SettingsHome(
                         SettingsPage.Productivity -> R.string.settings_productivity
                         SettingsPage.Themes -> R.string.settings_themes
                         SettingsPage.Advanced -> R.string.settings_advanced
+                        SettingsPage.TailFinHub -> R.string.tailfin_hub_title
                         else -> R.string.settings_about
                     }
                     val summary = when (page) {
                         SettingsPage.Productivity -> R.string.settings_productivity_summary
                         SettingsPage.Themes -> R.string.settings_themes_summary
                         SettingsPage.Advanced -> R.string.settings_advanced_summary
+                        SettingsPage.TailFinHub -> R.string.tailfin_hub_summary
                         else -> R.string.settings_about_summary
                     }
                     SettingsActionItem(

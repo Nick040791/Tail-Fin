@@ -62,7 +62,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.galaxyrio.gracelauncher.R
+import com.tailfin.launcher.R
 import com.galaxyrio.gracelauncher.data.AlphabetAppearance
 import com.galaxyrio.gracelauncher.data.IconShape
 import com.galaxyrio.gracelauncher.data.icons.iconShapePath

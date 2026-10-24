@@ -23,6 +23,7 @@ data class FontLibrary(
         .put("unselected", JSONArray(unselected.distinct())).toString()
 
     companion object {
+        const val Montserrat = "montserrat"
         const val Josefin = "josefin_sans"
         val builtIns: List<String> get() = AppFont.entries.map { it.id ?: Josefin }
         fun decode(json: String?, legacyFont: String? = null): FontLibrary = runCatching {
