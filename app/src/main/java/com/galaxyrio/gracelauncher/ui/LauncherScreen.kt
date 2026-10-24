@@ -25,6 +25,7 @@ import androidx.core.app.ActivityCompat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -66,12 +67,14 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -997,7 +1000,13 @@ internal fun LauncherScreen(
     CompositionLocalProvider(LocalLauncherAppearance provides appearance, LocalListAppearance provides uiState.settings.listAppearance,
         LocalHapticFeedback provides haptics, LocalWidgetHost provides widgetHost,
         LocalPopupGestureSettings provides popupSettings) {
-      // One wallpaper treatment serves both transparent search and the alphabetical app list.
+      // Default TailFin Launcher Background + wallpaper dim treatment
+      Image(
+          painter = painterResource(R.drawable.tailfin_launcher_background),
+          contentDescription = null,
+          contentScale = ContentScale.Crop,
+          modifier = Modifier.fillMaxSize(),
+      )
       val revealDimAlpha = if (drawerTransition != null && uiState.settings.dimWallpaper)
           uiState.settings.wallpaperDimAmount.coerceIn(0, 100) / 100f else dimAlpha
       Box(Modifier.fillMaxSize().graceReveal(drawerTransition, reveal = true).background(wallpaperTint.copy(alpha = revealDimAlpha)))

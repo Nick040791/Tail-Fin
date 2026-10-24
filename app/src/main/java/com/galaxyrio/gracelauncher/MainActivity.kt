@@ -1,5 +1,6 @@
 package com.galaxyrio.gracelauncher
 
+import android.app.WallpaperManager
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -19,6 +20,8 @@ import com.galaxyrio.gracelauncher.ui.LauncherAppTheme
 import com.galaxyrio.gracelauncher.ui.LauncherRoute
 import com.galaxyrio.gracelauncher.ui.LauncherViewModel
 import com.galaxyrio.gracelauncher.ui.components.LocalAppTransitions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val launcherViewModel: LauncherViewModel by viewModels()
@@ -27,6 +30,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyDefaultTailFinWallpaperOnce()
         if (intent.getBooleanExtra(EXTRA_EDIT_WIDGET, false)) { widgetEditRequest++; intent.removeExtra(EXTRA_EDIT_WIDGET) }
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
@@ -73,6 +77,19 @@ class MainActivity : ComponentActivity() {
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (event.actionMasked == MotionEvent.ACTION_DOWN) appTransitions.close()
         return super.dispatchTouchEvent(event)
+    }
+
+    private fun applyDefaultTailFinWallpaperOnce() {
+        val prefs = getSharedPreferences("tailfin_wallpaper_prefs", MODE_PRIVATE)
+        if (!prefs.getBoolean("default_wallpaper_applied", false)) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                runCatching {
+                    WallpaperManager.getInstance(applicationContext)
+                        .setResource(com.tailfin.launcher.R.drawable.tailfin_launcher_background)
+                    prefs.edit().putBoolean("default_wallpaper_applied", true).apply()
+                }
+            }
+        }
     }
 
     companion object { const val EXTRA_EDIT_WIDGET = "editHomeWidget" }
