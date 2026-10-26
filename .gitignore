@@ -63,3 +63,6 @@ notes.md
 
 
 
+
+# Server is an independent git repository; ignore entirely
+/server/
