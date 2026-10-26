@@ -43,4 +43,21 @@ signing.properties
 .env
 .env.*
 !.env.example
+token.txt
+server/token.txt
+token.json
+server/token.json
+credentials.json
+server/credentials.json
+messages.json
+server/messages.json
+server/selected_model.txt
+selected_model.txt
+server/*.tmp
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+
 
