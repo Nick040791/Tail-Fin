@@ -38,7 +38,7 @@ Listens on port 8080. First run prints a pairing token and saves it to
 - `FIN_PORT` — default `8080`
 - `FIN_TOKEN` — pairing token (generated + saved to `token.txt` if unset)
 - `OLLAMA_URL` — default `http://127.0.0.1:11434`
-- `FIN_MODEL` — default `flint:40b-a2b-qat-int4`
+- `FIN_MODEL` — default `Fin:latest`
 - `FIN_NUM_CTX` — context cap, default `32768`
 - `GEMINI_API_KEY` — API key for Google Gemini models
 - `OPENROUTER_API_KEY` — API key for OpenRouter models

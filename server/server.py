@@ -75,7 +75,7 @@ load_dotenv()
 
 PORT = int(os.environ.get("FIN_PORT", "8080"))
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
-MODEL = os.environ.get("FIN_MODEL", "flint:40b-a2b-qat-int4")
+MODEL = os.environ.get("FIN_MODEL", "Fin:latest")
 NUM_CTX = int(os.environ.get("FIN_NUM_CTX", "32768"))
 PROVIDER = os.environ.get("FIN_PROVIDER", "ollama").strip().lower() or "ollama"
 MODEL_STATE_FILE = os.path.join(HERE, "selected_model.txt")
@@ -120,7 +120,7 @@ def resolve_provider(model_name):
             "https://openrouter.ai/api/v1/chat/completions",
             openrouter_key,
         )
-    if "/" in m and not m.startswith("flint"):
+    if "/" in m and not m.startswith("flint") and not m.lower().startswith("fin"):
         return (
             "openrouter",
             m,
