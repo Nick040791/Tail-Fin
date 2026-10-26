@@ -3,13 +3,11 @@ package com.tailfin.launcher.memory
 import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.PackageManager
-import rikka.shizuku.Shizuku
 
 data class MemorySnapshot(
     val availBytes: Long,
     val totalBytes: Long,
     val lowMemory: Boolean,
-    val shizukuAvailable: Boolean,
 ) {
     val usedBytes: Long get() = (totalBytes - availBytes).coerceAtLeast(0L)
     val availMb: Long get() = availBytes / (1024L * 1024L)
@@ -27,17 +25,15 @@ object MemoryOptimizer {
         "com.tailscale.ipn",
         "com.stablyai.orca",
         "com.stably.orca.mobile",
-        "moe.shizuku.privileged.api",
         "com.nicholas.fin",
         "com.scariflabs.horus",
+        "net.thunderbird.android.beta",
+        "net.thunderbird.android",
+        "com.fsck.k9",
     )
 
     fun isProtectedPackage(packageName: String): Boolean =
         packageName in PROTECTED_PACKAGES
-
-    fun isShizukuReady(): Boolean = runCatching {
-        Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
-    }.getOrDefault(false)
 
     fun getMemorySnapshot(context: Context): MemorySnapshot {
         val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -47,7 +43,6 @@ object MemoryOptimizer {
             availBytes = memInfo.availMem,
             totalBytes = memInfo.totalMem,
             lowMemory = memInfo.lowMemory,
-            shizukuAvailable = isShizukuReady(),
         )
     }
 
@@ -74,27 +69,8 @@ object MemoryOptimizer {
             }
         }
 
-        if (force && isShizukuReady()) {
-            trimCachesViaShizuku()
-        }
-
         System.gc()
         am.getMemoryInfo(memInfo)
         return (memInfo.availMem - beforeAvail).coerceAtLeast(0L)
-    }
-
-    private fun trimCachesViaShizuku() {
-        runCatching {
-            // Use Shizuku privileged binder if available to trim background cached processes
-            val method = Shizuku::class.java.getDeclaredMethod(
-                "newProcess",
-                Array<String>::class.java,
-                Array<String>::class.java,
-                String::class.java,
-            )
-            method.isAccessible = true
-            val process = method.invoke(null, arrayOf("am", "kill-all"), null, null) as? Process
-            process?.waitFor()
-        }
     }
 }

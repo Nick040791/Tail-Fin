@@ -37,10 +37,7 @@ object NativeEcosystemManager {
     const val PKG_FIN = "com.nicholas.fin"
     const val PKG_HORUS = "com.scariflabs.horus"
     const val PKG_FDROID = "org.fdroid.fdroid"
-    const val PKG_SHIZUKU = "moe.shizuku.privileged.api"
-    const val PKG_TASKMANAGER = "com.rk.taskmanager"
-    const val PKG_K9MAIL = "com.fsck.k9"
-    const val PKG_FOSSIFY_FILES = "org.fossify.filemanager"
+    const val PKG_THUNDERBIRD = "net.thunderbird.android.beta"
 
     val CORE_ECOSYSTEM_APPS: List<EcosystemAppSpec> = listOf(
         EcosystemAppSpec(
@@ -61,20 +58,20 @@ object NativeEcosystemManager {
             sourceRepo = "stablyai/orca",
         ),
         EcosystemAppSpec(
-            id = "fin",
-            title = "Fin Assistant",
-            roleDescription = "Default personal AI assistant (ACTION_ASSIST)",
-            primaryPackageName = PKG_FIN,
-            bundledAssetName = "fin-debug.apk",
-            sourceRepo = "Nick040791/Tail-Fin",
-        ),
-        EcosystemAppSpec(
             id = "horus",
             title = "Horus Console",
             roleDescription = "Integrated terminal & console app",
             primaryPackageName = PKG_HORUS,
             bundledAssetName = "horus-1.0.4.apk",
             sourceRepo = "scariflabs/horus",
+        ),
+        EcosystemAppSpec(
+            id = "fin",
+            title = "Fin Assistant",
+            roleDescription = "Default personal AI assistant (ACTION_ASSIST)",
+            primaryPackageName = PKG_FIN,
+            bundledAssetName = "fin-debug.apk",
+            sourceRepo = "Nick040791/Tail-Fin",
         ),
         EcosystemAppSpec(
             id = "chromium",
@@ -94,37 +91,13 @@ object NativeEcosystemManager {
             sourceRepo = "f-droid.org",
         ),
         EcosystemAppSpec(
-            id = "shizuku",
-            title = "Shizuku",
-            roleDescription = "Privileged ADB-level binder API for TailFin",
-            primaryPackageName = PKG_SHIZUKU,
-            bundledAssetName = "shizuku-v13.6.0.r1086.2650830c-release.apk",
-            sourceRepo = "RikkaApps/Shizuku",
-        ),
-        EcosystemAppSpec(
-            id = "taskmanager",
-            title = "TaskManager",
-            roleDescription = "Process monitor linked to TailFin RAM gauge",
-            primaryPackageName = PKG_TASKMANAGER,
-            bundledAssetName = "taskmanager-v1.5.2.apk",
-            sourceRepo = "RohitKushvaha01/TaskManager",
-        ),
-        EcosystemAppSpec(
-            id = "k9mail",
-            title = "Thunderbird / K-9",
+            id = "thunderbird",
+            title = "Thunderbird Mail",
             roleDescription = "Default open-source email client",
-            primaryPackageName = PKG_K9MAIL,
-            alternatePackageNames = listOf("net.thunderbird.android"),
-            bundledAssetName = "k9mail-24.0.apk",
-            sourceRepo = "K9MAIL_24_0",
-        ),
-        EcosystemAppSpec(
-            id = "fossify_files",
-            title = "Fossify File Manager",
-            roleDescription = "Open-source local file manager",
-            primaryPackageName = PKG_FOSSIFY_FILES,
-            bundledAssetName = "org.fossify.filemanager_13.apk",
-            sourceRepo = "FossifyOrg/File-Manager",
+            primaryPackageName = PKG_THUNDERBIRD,
+            alternatePackageNames = listOf("net.thunderbird.android", "com.fsck.k9"),
+            bundledAssetName = "thunderbird-25.0b2.apk",
+            sourceRepo = "thunderbird/thunderbird-android",
         ),
     )
 

@@ -127,8 +127,11 @@ class TailFinCoreTest {
     @Test
     fun nativeEcosystemAndMemoryOptimizerProtectCoreFossApps() {
         val appIds = NativeEcosystemManager.CORE_ECOSYSTEM_APPS.map { it.id }.toSet()
-        assertTrue(appIds.containsAll(setOf("tailscale", "orca", "fin", "horus", "chromium", "fdroid", "shizuku", "taskmanager", "k9mail")))
+        assertTrue(appIds.containsAll(setOf("tailscale", "orca", "fin", "horus", "chromium", "fdroid", "thunderbird")))
         assertFalse(appIds.contains("dicio"))
+        assertFalse(appIds.contains("shizuku"))
+        assertFalse(appIds.contains("taskmanager"))
+        assertFalse(appIds.contains("fossify_files"))
 
         val finSpec = NativeEcosystemManager.CORE_ECOSYSTEM_APPS.first { it.id == "fin" }
         assertEquals("com.nicholas.fin", finSpec.primaryPackageName)
@@ -138,18 +141,21 @@ class TailFinCoreTest {
         assertEquals("com.scariflabs.horus", horusSpec.primaryPackageName)
         assertEquals("horus-1.0.4.apk", horusSpec.bundledAssetName)
 
+        val thunderbirdSpec = NativeEcosystemManager.CORE_ECOSYSTEM_APPS.first { it.id == "thunderbird" }
+        assertEquals("net.thunderbird.android.beta", thunderbirdSpec.primaryPackageName)
+        assertEquals("thunderbird-25.0b2.apk", thunderbirdSpec.bundledAssetName)
+
         assertTrue(MemoryOptimizer.isProtectedPackage("com.tailfin.launcher"))
         assertTrue(MemoryOptimizer.isProtectedPackage("com.tailscale.ipn"))
         assertTrue(MemoryOptimizer.isProtectedPackage("com.stablyai.orca"))
-        assertTrue(MemoryOptimizer.isProtectedPackage("moe.shizuku.privileged.api"))
         assertTrue(MemoryOptimizer.isProtectedPackage("com.nicholas.fin"))
         assertTrue(MemoryOptimizer.isProtectedPackage("com.scariflabs.horus"))
+        assertTrue(MemoryOptimizer.isProtectedPackage("net.thunderbird.android.beta"))
 
         val snapshot = MemorySnapshot(
             availBytes = 1024L * 1024L * 1024L,
             totalBytes = 4096L * 1024L * 1024L,
             lowMemory = false,
-            shizukuAvailable = true,
         )
         assertEquals(75, snapshot.usedPercent)
         assertEquals(1024L, snapshot.availMb)

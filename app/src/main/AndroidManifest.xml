@@ -43,10 +43,9 @@
         <package android:name="com.scariflabs.horus" />
         <package android:name="org.chromium.chrome" />
         <package android:name="org.fdroid.fdroid" />
-        <package android:name="moe.shizuku.privileged.api" />
-        <package android:name="com.rk.taskmanager" />
+        <package android:name="net.thunderbird.android.beta" />
+        <package android:name="net.thunderbird.android" />
         <package android:name="com.fsck.k9" />
-        <package android:name="org.fossify.filemanager" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
@@ -74,15 +73,6 @@
             android:authorities="com.tailfin.launcher.env"
             android:exported="true"
             android:readPermission="com.tailfin.permission.READ_ENV_VAULT" />
-
-        <!-- Shizuku Binder Provider for Privileged Operations -->
-        <provider
-            android:name="rikka.shizuku.ShizukuProvider"
-            android:authorities="${applicationId}.shizuku"
-            android:enabled="true"
-            android:exported="true"
-            android:multiprocess="false"
-            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
 
         <!-- Background Memory Optimizer Service -->
         <service

@@ -34,7 +34,7 @@ object DeveloperModeEnforcer {
         runCatching {
             AlertDialog.Builder(activity)
                 .setTitle("Developer Mode Required")
-                .setMessage("TailFin requires Android Developer Mode for Shizuku, Horus console debugging, and memory optimization. Enable it now?")
+                .setMessage("TailFin requires Android Developer Mode for Horus console debugging and developer tools. Enable it now?")
                 .setPositiveButton("Open Settings") { _, _ ->
                     openDeveloperSettings(context)
                 }

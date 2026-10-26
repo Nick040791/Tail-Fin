@@ -62,11 +62,9 @@ object LiteSecurityScanner {
         "com.scariflabs.horus",
         "org.chromium.chrome",
         "org.fdroid.fdroid",
-        "moe.shizuku.privileged.api",
-        "com.rk.taskmanager",
-        "com.fsck.k9",
+        "net.thunderbird.android.beta",
         "net.thunderbird.android",
-        "org.fossify.filemanager",
+        "com.fsck.k9",
         "org.breezyweather",
     )
 

@@ -226,11 +226,6 @@ fun TailFinHubScreen(
                         color = if (devModeActive) TailFinMetallicSilver else TailFinAmbientRed,
                         fontSize = 13.sp,
                     )
-                    Text(
-                        text = "Shizuku Privileged API: ${if (memSnapshot.shizukuAvailable) "Ready" else "Not Bound"}",
-                        color = TailFinTextMuted,
-                        fontSize = 13.sp,
-                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
                             onClick = { NativeEcosystemManager.launchHorusConsole(context) },
@@ -295,14 +290,6 @@ fun TailFinHubScreen(
                         ) {
                             Text("Sweep RAM Now", color = TailFinTextPrimary)
                         }
-                        OutlinedButton(
-                            onClick = {
-                                val spec = NativeEcosystemManager.CORE_ECOSYSTEM_APPS.first { it.id == "taskmanager" }
-                                NativeEcosystemManager.launchSpec(context, spec)
-                            },
-                        ) {
-                            Text("Open TaskManager", color = TailFinMetallicSilver)
-                        }
                     }
                 }
             }
@@ -348,7 +335,7 @@ fun TailFinHubScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Suppress Non-Essential Badges", color = TailFinTextPrimary, fontWeight = FontWeight.Medium)
                             Text(
-                                "Only allow badges from Tailscale, Orca, Fin, Horus, K-9 Mail & Phone/SMS",
+                                "Only allow badges from Tailscale, Orca, Fin, Horus, Thunderbird & Phone/SMS",
                                 color = TailFinTextMuted,
                                 fontSize = 12.sp,
                             )

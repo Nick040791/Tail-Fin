@@ -7,8 +7,6 @@ import android.content.Intent
 import android.provider.Settings
 import com.tailfin.launcher.ecosystem.ApkProvisioner
 import com.tailfin.launcher.ecosystem.NativeEcosystemManager
-import com.tailfin.launcher.memory.MemoryOptimizer
-import rikka.shizuku.Shizuku
 
 object DefaultAssistantEnforcer {
 
@@ -18,33 +16,6 @@ object DefaultAssistantEnforcer {
     fun isFinDefaultAssistant(context: Context): Boolean = runCatching {
         val current = Settings.Secure.getString(context.contentResolver, "assistant").orEmpty()
         current.startsWith(NativeEcosystemManager.PKG_FIN)
-    }.getOrDefault(false)
-
-    fun trySetFinViaShizuku(): Boolean = runCatching {
-        if (!MemoryOptimizer.isShizukuReady()) return false
-        val method = Shizuku::class.java.getDeclaredMethod(
-            "newProcess",
-            Array<String>::class.java,
-            Array<String>::class.java,
-            String::class.java,
-        )
-        method.isAccessible = true
-        val p1 = method.invoke(
-            null,
-            arrayOf("cmd", "role", "add-role-holder", "android.app.role.ASSISTANT", NativeEcosystemManager.PKG_FIN),
-            null,
-            null,
-        ) as? Process
-        p1?.waitFor()
-
-        val p2 = method.invoke(
-            null,
-            arrayOf("settings", "put", "secure", "assistant", "${NativeEcosystemManager.PKG_FIN}/${NativeEcosystemManager.PKG_FIN}.MainActivity"),
-            null,
-            null,
-        ) as? Process
-        p2?.waitFor()
-        true
     }.getOrDefault(false)
 
     fun openAssistantSettings(context: Context) {
@@ -65,10 +36,6 @@ object DefaultAssistantEnforcer {
         if (isFinDefaultAssistant(context)) return
 
         val finInstalled = NativeEcosystemManager.isPackageInstalled(context, NativeEcosystemManager.PKG_FIN)
-        if (finInstalled && trySetFinViaShizuku() && isFinDefaultAssistant(context)) {
-            return
-        }
-
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         if (!forcePrompt && prefs.getBoolean(KEY_ASSISTANT_PROMPTED, false)) return
 
