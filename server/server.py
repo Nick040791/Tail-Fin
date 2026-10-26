@@ -7,7 +7,7 @@ Exposes the HTTP API the Fin Android app talks to:
   POST /api/chat     -> {"messages": [{"role": "user", "content": "..."}],
                          "model": "<optional per-request model>"}
                         replies with newline-delimited JSON:
-                          {"delta": "..."} ... {"done": true}
+                          {"delta": "..."} ... data: [DONE]
                         Messages starting with "/" are slash commands handled
                         deterministically on the server (see below) — no model call.
   POST /api/messages -> {"messages": [{"address","body","date","type"}]}
@@ -925,7 +925,7 @@ class Handler(BaseHTTPRequestHandler):
                     (json.dumps({"delta": text[i : i + 400]}) + "\n").encode("utf-8")
                 )
                 self.wfile.flush()
-            self.wfile.write(b'{"done": true}\n')
+            self.wfile.write(b"data: [DONE]\n")
             self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError):
             pass
@@ -1135,7 +1135,7 @@ class Handler(BaseHTTPRequestHandler):
                                 self.wfile.flush()
                         except ValueError:
                             continue
-            self.wfile.write(b'{"done": true}\n')
+            self.wfile.write(b"data: [DONE]\n")
             self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError):
             pass

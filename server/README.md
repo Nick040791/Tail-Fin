@@ -29,7 +29,7 @@ Listens on port 8080. First run prints a pairing token and saves it to
 - `POST /api/models` → `{"model": "<name or number>"}` switches active model
 - `POST /api/chat` with `Authorization: Bearer <token>` and body
   `{"messages": [{"role": "user", "content": "..."}]}` → newline-delimited
-  JSON: `{"delta": "..."}` chunks, then `{"done": true}`.
+  JSON: `{"delta": "..."}` chunks, then `data: [DONE]`.
 - `POST /api/messages` → syncs SMS text messages
 - `GET /api/messages?q=query` → searches synced SMS text messages
 
