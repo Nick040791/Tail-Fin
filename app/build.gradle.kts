@@ -15,8 +15,8 @@ android {
         applicationId = "com.tailfin.launcher"
         minSdk = 26 // Android 8.0+ support (compatible with Android 11 Moto G Power 2021)
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0-tailfin"
+        versionCode = 2
+        versionName = "1.1.0-tailfin"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -66,9 +66,6 @@ dependencies {
 
     // AndroidX Security Crypto for hardware-backed .env storage
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-
-    // JSch (Modern fork) for the integrated SSH terminal client
-    implementation("com.github.mwiede:jsch:0.2.19")
 
     // AppCompat for native AlertDialog prompts
     implementation(libs.androidx.appcompat)

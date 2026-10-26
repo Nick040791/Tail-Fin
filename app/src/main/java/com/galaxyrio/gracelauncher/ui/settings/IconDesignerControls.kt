@@ -172,7 +172,7 @@ internal fun LazyListScope.iconDesignerControls(
                                     .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = { onSuggestion(icon.id) })
                                     .testTag("icon_designer_suggestion:${icon.id}"), contentAlignment = Alignment.Center) {
                                     Icon(painterResource(icon.drawable), stringResource(icon.label),
-                                        Modifier.size(if (icon == GraceButtonIcon.Suggestion.Default) 40.dp else 24.dp),
+                                        Modifier.size(24.dp),
                                         tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }

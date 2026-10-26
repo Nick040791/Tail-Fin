@@ -8,7 +8,7 @@ import androidx.core.content.edit
 /**
  * TailFin Distraction-Free UI filter.
  * Suppresses non-essential notification badges and promotional/telemetry alerts while
- * preserving priority notifications from core FOSS tools (Tailscale, Orca, Dicio, K-9 Mail).
+ * preserving priority notifications from core FOSS tools (Tailscale, Orca, Fin, Horus, K-9 Mail).
  */
 object DistractionFilterService {
 
@@ -21,7 +21,8 @@ object DistractionFilterService {
         "com.tailscale.ipn",
         "com.stablyai.orca",
         "com.stably.orca.mobile",
-        "org.stypox.dicio",
+        "com.nicholas.fin",
+        "com.scariflabs.horus",
         "com.fsck.k9",
         "net.thunderbird.android",
         "moe.shizuku.privileged.api",

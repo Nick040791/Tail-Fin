@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <!-- Requested only when the user explicitly enables local contact search. -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
@@ -38,8 +39,9 @@
         <package android:name="com.tailscale.ipn" />
         <package android:name="com.stablyai.orca" />
         <package android:name="com.stably.orca.mobile" />
+        <package android:name="com.nicholas.fin" />
+        <package android:name="com.scariflabs.horus" />
         <package android:name="org.chromium.chrome" />
-        <package android:name="org.stypox.dicio" />
         <package android:name="org.fdroid.fdroid" />
         <package android:name="moe.shizuku.privileged.api" />
         <package android:name="com.rk.taskmanager" />

@@ -10,7 +10,7 @@
     <string name="media_idle_title">Nothing playing</string>
     <string name="media_idle_summary">Tap play to resume</string>
     <string name="settings_none">None</string>
-    <string name="settings_grace_button">Grace button</string>
+    <string name="settings_grace_button">Search button</string>
     <string name="settings_grace_button_summary">Floating action button</string>
     <string name="grace_button_position_size">Position and size</string>
     <string name="grace_button_alignment">Alignment</string>
@@ -23,7 +23,7 @@
     <string name="grace_button_bottom_distance">Distance from bottom</string>
     <string name="grace_button_size">Button size</string>
     <string name="grace_button_position_hint">Drag the button to change its position</string>
-    <string name="grace_button_enable">Enable Grace button</string>
+    <string name="grace_button_enable">Enable Search button</string>
     <string name="grace_button_tap">Single tap</string>
     <string name="grace_button_long_press">Long press</string>
     <string name="grace_button_open_app">Open app</string>
@@ -46,7 +46,7 @@
     <string name="grace_button_url_error">Enter a valid HTTP or HTTPS website address.</string>
     <string name="grace_action_unavailable">This action is unavailable on this device.</string>
     <string name="grace_accessibility_title">Allow system actions</string>
-    <string name="grace_accessibility_description">Use Grace button or home screen gestures to lock the screen or open notifications and control center. No screen content is read or stored.</string>
+    <string name="grace_accessibility_description">Use Search button or home screen gestures to lock the screen or open notifications and control center. No screen content is read or stored.</string>
     <string name="grace_accessibility_explanation">These actions need Android accessibility access, not root. In system settings, enable Grace Launcher under installed apps or downloaded services. Grace only performs the action you trigger; it does not read screen content or monitor your activity. You can revoke access at any time.</string>
     <string name="grace_accessibility_required">Requires accessibility access for system actions.</string>
     <string name="shortcuts_title">Shortcuts</string>
@@ -742,7 +742,7 @@
     <string name="widget_screen_title">Widget screen</string>
     <string name="widget_screen_enable">Enable widget screen</string>
     <string name="widget_screen_swipe">Swipe left on home</string>
-    <string name="widget_screen_swipe_disabled">You can open this screen using a gesture or a Grace button action</string>
+    <string name="widget_screen_swipe_disabled">You can open this screen using a gesture or a Search button action</string>
     <string name="widget_screen_columns">Cells per row</string>
     <string name="widget_screen_edit">Edit widget screen</string>
     <string name="widget_screen_open">Open widget screen</string>

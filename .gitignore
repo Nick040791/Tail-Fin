@@ -58,6 +58,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Logs and Internal Notes
+notes.md
 
 
 

@@ -27,7 +27,7 @@ internal object GraceSystemActions {
         GraceButtonAction.Website -> target.url?.let(::websiteUri)?.let { uri ->
             open(context, Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE))
         } ?: false
-        GraceButtonAction.Assistant -> com.tailfin.launcher.ecosystem.NativeEcosystemManager.launchDicioAssistant(context) ||
+        GraceButtonAction.Assistant -> com.tailfin.launcher.ecosystem.NativeEcosystemManager.launchFinAssistant(context) ||
             open(context, Intent(Intent.ACTION_ASSIST)) ||
             open(context, Intent(Intent.ACTION_VOICE_COMMAND))
         GraceButtonAction.LockScreen, GraceButtonAction.Notifications, GraceButtonAction.QuickSettings ->

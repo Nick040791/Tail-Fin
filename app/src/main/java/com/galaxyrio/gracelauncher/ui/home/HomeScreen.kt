@@ -418,10 +418,8 @@ fun HomeScreen(
             modifier = Modifier.padding(start = uiState.settings.listAppearance.startPadding, end = uiState.settings.listAppearance.endPadding)
                 .offset(y = (if (baselineIndex >= 0) baselineTop else resolvedTop) - 20.dp))
 
-        var showSshTerminal by rememberSaveable { mutableStateOf(false) }
         if (!editingLayout && !widgetEditing) {
             com.tailfin.launcher.ui.TailFinHomeStatusPillBar(
-                onOpenSshTerminal = { showSshTerminal = true },
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(
@@ -430,13 +428,6 @@ fun HomeScreen(
                         bottom = bottomInset + 12.dp,
                     ),
             )
-        }
-        if (showSshTerminal) {
-            Box(Modifier.fillMaxSize().zIndex(10f)) {
-                com.tailfin.launcher.terminal.SshTerminalDrawer(
-                    onClose = { showSshTerminal = false },
-                )
-            }
         }
     }
 }

@@ -196,8 +196,8 @@ internal fun GraceButtonArtwork(artwork: ImageBitmap?, design: IconDesign, size:
         shadowElevation = if (!editing && design.shape == IconShape.None) 0.dp else 6.dp * (size / 54.dp)) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             if (!editing && artwork != null) Image(artwork, null, Modifier.fillMaxSize())
-            else Icon(painterResource(if (editing) R.drawable.ms_check else R.drawable.ic_grace_solid), null,
-                Modifier.size(size * (if (editing) 26f else 40f) / 54f))
+            else Icon(painterResource(if (editing) R.drawable.ms_check else R.drawable.ms_search), null,
+                Modifier.size(size * 26f / 54f))
         }
     }
 }

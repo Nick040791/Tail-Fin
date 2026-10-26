@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -20,6 +21,10 @@ import com.galaxyrio.gracelauncher.ui.LauncherAppTheme
 import com.galaxyrio.gracelauncher.ui.LauncherRoute
 import com.galaxyrio.gracelauncher.ui.LauncherViewModel
 import com.galaxyrio.gracelauncher.ui.components.LocalAppTransitions
+import com.tailfin.launcher.assistant.DefaultAssistantEnforcer
+import com.tailfin.launcher.devmode.DeveloperModeEnforcer
+import com.tailfin.launcher.memory.MemoryOptimizer
+import com.tailfin.launcher.permissions.TailFinPermissionCoordinator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -28,9 +33,19 @@ class MainActivity : ComponentActivity() {
     private var widgetEditRequest by mutableIntStateOf(0)
     private val appTransitions by lazy { LauncherAppTransitions(this, lifecycleScope) }
 
+    private val firstLaunchPermissionsLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) {
+        launcherViewModel.refreshOnResume()
+        launcherViewModel.refreshSchedule()
+        DefaultAssistantEnforcer.verifyAndPrompt(this)
+        DeveloperModeEnforcer.verifyAndPrompt(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applyDefaultTailFinWallpaperOnce()
+        requestFirstLaunchPermissionsIfNeeded()
         if (intent.getBooleanExtra(EXTRA_EDIT_WIDGET, false)) { widgetEditRequest++; intent.removeExtra(EXTRA_EDIT_WIDGET) }
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
@@ -48,10 +63,25 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        com.tailfin.launcher.devmode.DeveloperModeEnforcer.verifyAndPrompt(this)
-        com.tailfin.launcher.memory.MemoryOptimizer.optimizeIfNeeded(this)
+        if (!TailFinPermissionCoordinator.isFirstLaunchPermissionPending(this)) {
+            DefaultAssistantEnforcer.verifyAndPrompt(this)
+            DeveloperModeEnforcer.verifyAndPrompt(this)
+        }
+        MemoryOptimizer.optimizeIfNeeded(this)
         launcherViewModel.refreshOnResume()
         launcherViewModel.refreshSchedule()
+    }
+
+    private fun requestFirstLaunchPermissionsIfNeeded() {
+        if (!TailFinPermissionCoordinator.isFirstLaunchPermissionPending(this)) return
+        TailFinPermissionCoordinator.markFirstLaunchPermissionsRequested(this)
+        val missing = TailFinPermissionCoordinator.getMissingRuntimePermissions(this)
+        if (missing.isNotEmpty()) {
+            runCatching { firstLaunchPermissionsLauncher.launch(missing) }
+        } else {
+            DefaultAssistantEnforcer.verifyAndPrompt(this)
+            DeveloperModeEnforcer.verifyAndPrompt(this)
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

@@ -54,6 +54,7 @@ import com.galaxyrio.gracelauncher.ui.theme.TailFinOrcaSurface
 import com.galaxyrio.gracelauncher.ui.theme.TailFinScaleTeal
 import com.galaxyrio.gracelauncher.ui.theme.TailFinTextMuted
 import com.galaxyrio.gracelauncher.ui.theme.TailFinTextPrimary
+import com.tailfin.launcher.assistant.DefaultAssistantEnforcer
 import com.tailfin.launcher.devmode.DeveloperModeEnforcer
 import com.tailfin.launcher.ecosystem.NativeEcosystemManager
 import com.tailfin.launcher.memory.MemoryOptimizer
@@ -62,14 +63,12 @@ import com.tailfin.launcher.security.EnvVaultRepository
 import com.tailfin.launcher.security.LiteSecurityScanner
 import com.tailfin.launcher.security.SecurityAuditReport
 import com.tailfin.launcher.security.SecurityRiskLevel
-import com.tailfin.launcher.terminal.SshTerminalDrawer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
 fun TailFinHomeStatusPillBar(
-    onOpenSshTerminal: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -113,20 +112,20 @@ fun TailFinHomeStatusPillBar(
             },
         )
 
-        // 3. SSH Terminal Drawer Trigger
+        // 3. Horus Console Trigger
         StatusPillChip(
-            label = "SSH Terminal",
+            label = "Horus Console",
             accentColor = TailFinScaleTeal,
-            tag = "pill_ssh_terminal",
-            onClick = onOpenSshTerminal,
+            tag = "pill_horus_console",
+            onClick = { NativeEcosystemManager.launchHorusConsole(context) },
         )
 
-        // 4. Dicio Voice/Text Assistant Pill
+        // 4. Fin Personal AI Assistant Pill
         StatusPillChip(
-            label = "Dicio Assist",
+            label = "Fin Assistant",
             accentColor = TailFinOrcaBorder,
-            tag = "pill_dicio",
-            onClick = { NativeEcosystemManager.launchDicioAssistant(context) },
+            tag = "pill_fin_assistant",
+            onClick = { NativeEcosystemManager.launchFinAssistant(context) },
         )
 
         // 5. RAM Gauge & Memory Sweep Pill
@@ -180,10 +179,10 @@ fun TailFinHubScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var showSshTerminal by remember { mutableStateOf(false) }
     var refreshCount by remember { mutableIntStateOf(0) }
 
     val devModeActive = remember(context, refreshCount) { DeveloperModeEnforcer.isDeveloperModeActive(context) }
+    val finDefaultActive = remember(context, refreshCount) { DefaultAssistantEnforcer.isFinDefaultAssistant(context) }
     val tailscaleStatus = remember(context, refreshCount) { NativeEcosystemManager.getTailscaleStatus(context) }
     val memSnapshot = remember(context, refreshCount) { MemoryOptimizer.getMemorySnapshot(context) }
 
@@ -193,11 +192,6 @@ fun TailFinHubScreen(
 
     var auditReport by remember { mutableStateOf<SecurityAuditReport?>(null) }
     var scanning by remember { mutableStateOf(false) }
-
-    if (showSshTerminal) {
-        SshTerminalDrawer(onClose = { showSshTerminal = false })
-        return
-    }
 
     SettingsScaffold(
         title = "TailFin Control Center",
@@ -223,6 +217,11 @@ fun TailFinHubScreen(
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
+                        text = "Fin Default Assistant: ${if (finDefaultActive) "ACTIVE" else "Not Default (Tap to Set)"}",
+                        color = if (finDefaultActive) TailFinScaleTeal else TailFinAmbientRed,
+                        fontSize = 13.sp,
+                    )
+                    Text(
                         text = "Developer Mode: ${if (devModeActive) "ENABLED" else "DISABLED (Required)"}",
                         color = if (devModeActive) TailFinMetallicSilver else TailFinAmbientRed,
                         fontSize = 13.sp,
@@ -234,11 +233,21 @@ fun TailFinHubScreen(
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
-                            onClick = { showSshTerminal = true },
+                            onClick = { NativeEcosystemManager.launchHorusConsole(context) },
                             colors = ButtonDefaults.buttonColors(containerColor = TailFinScaleTeal),
-                            modifier = Modifier.testTag("open_ssh_drawer_btn"),
+                            modifier = Modifier.testTag("open_horus_console_btn"),
                         ) {
-                            Text("Open SSH Terminal", color = TailFinTextPrimary)
+                            Text("Launch Horus Console", color = TailFinTextPrimary)
+                        }
+                        if (!finDefaultActive) {
+                            OutlinedButton(
+                                onClick = {
+                                    DefaultAssistantEnforcer.verifyAndPrompt(context, forcePrompt = true)
+                                    refreshCount++
+                                },
+                            ) {
+                                Text("Set Fin Default", color = TailFinScaleTeal)
+                            }
                         }
                         if (!devModeActive) {
                             OutlinedButton(
@@ -339,7 +348,7 @@ fun TailFinHubScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Suppress Non-Essential Badges", color = TailFinTextPrimary, fontWeight = FontWeight.Medium)
                             Text(
-                                "Only allow badges from Tailscale, Orca, Dicio, K-9 Mail & Phone/SMS",
+                                "Only allow badges from Tailscale, Orca, Fin, Horus, K-9 Mail & Phone/SMS",
                                 color = TailFinTextMuted,
                                 fontSize = 12.sp,
                             )

@@ -34,7 +34,8 @@ object NativeEcosystemManager {
     const val PKG_ORCA = "com.stablyai.orca"
     const val PKG_ORCA_ACTUAL = "com.stably.orca.mobile"
     const val PKG_CHROMIUM = "org.chromium.chrome"
-    const val PKG_DICIO = "org.stypox.dicio"
+    const val PKG_FIN = "com.nicholas.fin"
+    const val PKG_HORUS = "com.scariflabs.horus"
     const val PKG_FDROID = "org.fdroid.fdroid"
     const val PKG_SHIZUKU = "moe.shizuku.privileged.api"
     const val PKG_TASKMANAGER = "com.rk.taskmanager"
@@ -60,6 +61,22 @@ object NativeEcosystemManager {
             sourceRepo = "stablyai/orca",
         ),
         EcosystemAppSpec(
+            id = "fin",
+            title = "Fin Assistant",
+            roleDescription = "Default personal AI assistant (ACTION_ASSIST)",
+            primaryPackageName = PKG_FIN,
+            bundledAssetName = "fin-debug.apk",
+            sourceRepo = "Nick040791/Tail-Fin",
+        ),
+        EcosystemAppSpec(
+            id = "horus",
+            title = "Horus Console",
+            roleDescription = "Integrated terminal & console app",
+            primaryPackageName = PKG_HORUS,
+            bundledAssetName = "horus-1.0.4.apk",
+            sourceRepo = "scariflabs/horus",
+        ),
+        EcosystemAppSpec(
             id = "chromium",
             title = "Chromium",
             roleDescription = "Default privacy browser & web search handler",
@@ -67,14 +84,6 @@ object NativeEcosystemManager {
             alternatePackageNames = listOf("org.ungoogled.chromium", "com.brave.browser"),
             bundledAssetName = null,
             sourceRepo = "chromium/chromium",
-        ),
-        EcosystemAppSpec(
-            id = "dicio",
-            title = "Dicio Assistant",
-            roleDescription = "Default voice/text assistant (ACTION_ASSIST)",
-            primaryPackageName = PKG_DICIO,
-            bundledAssetName = "Dicio_4.2.apk",
-            sourceRepo = "DicioTeam/dicio-android",
         ),
         EcosystemAppSpec(
             id = "fdroid",
@@ -180,9 +189,9 @@ object NativeEcosystemManager {
         launchOrProvision(context, spec.primaryPackageName, spec.bundledAssetName.orEmpty())
     }
 
-    fun launchDicioAssistant(context: Context): Boolean {
+    fun launchFinAssistant(context: Context): Boolean {
         val assistIntent = Intent(Intent.ACTION_ASSIST).apply {
-            setPackage(PKG_DICIO)
+            setPackage(PKG_FIN)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         if (assistIntent.resolveActivity(context.packageManager) != null) {
@@ -191,7 +200,7 @@ object NativeEcosystemManager {
                 true
             }.getOrDefault(false)
         }
-        val launchIntent = context.packageManager.getLaunchIntentForPackage(PKG_DICIO)
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(PKG_FIN)
         if (launchIntent != null) {
             return runCatching {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -199,12 +208,17 @@ object NativeEcosystemManager {
                 true
             }.getOrDefault(false)
         }
-        val dicioSpec = CORE_ECOSYSTEM_APPS.first { it.id == "dicio" }
-        dicioSpec.bundledAssetName?.let {
-            ApkProvisioner.installBundledApk(context, "apks/$it", PKG_DICIO)
+        val finSpec = CORE_ECOSYSTEM_APPS.first { it.id == "fin" }
+        finSpec.bundledAssetName?.let {
+            ApkProvisioner.installBundledApk(context, "apks/$it", PKG_FIN)
             return true
         }
         return false
+    }
+
+    fun launchHorusConsole(context: Context) {
+        val horusSpec = CORE_ECOSYSTEM_APPS.first { it.id == "horus" }
+        launchSpec(context, horusSpec)
     }
 
     fun getTailscaleStatus(context: Context): TailscaleStatus {

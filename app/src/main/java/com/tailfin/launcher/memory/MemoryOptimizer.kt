@@ -28,7 +28,8 @@ object MemoryOptimizer {
         "com.stablyai.orca",
         "com.stably.orca.mobile",
         "moe.shizuku.privileged.api",
-        "org.stypox.dicio"
+        "com.nicholas.fin",
+        "com.scariflabs.horus",
     )
 
     fun isProtectedPackage(packageName: String): Boolean =
