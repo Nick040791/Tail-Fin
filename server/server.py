@@ -1,37 +1,21 @@
 #!/usr/bin/env python3
-"""Fin agent server — runs on the PC next to Ollama.
+"""Fin agent server — runs on the PC next to Ollama & PostgreSQL (pgvector).
 
 Exposes the HTTP API the Fin Android app talks to:
-  GET  /health       -> {"status": "ok", "model": ..., "tools": ...}
+  GET  /health       -> {"status": "ok", "model": ..., "db": ..., "skills": ..., "tools": ...}
   GET  /models       -> {"models": [...], "current": ...} (Ollama + Cloud)
   POST /api/chat     -> {"messages": [{"role": "user", "content": "..."}],
                          "model": "<optional per-request model>"}
                         replies with newline-delimited JSON:
                           {"delta": "..."} ... data: [DONE]
-                        Messages starting with "/" are slash commands handled
-                        deterministically on the server (see below) — no model call.
+                        Supports Natural-Language Approvals ("yes, send it", "cancel"),
+                        deterministic slash commands, modular SKILL.md injection,
+                        PostgreSQL + pgvector hybrid memory, and MCP tools.
   POST /api/messages -> {"messages": [{"address","body","date","type"}]}
-                        stores SMS synced from the phone, deduped
+                        stores SMS synced from the phone in PostgreSQL + messages.json
   GET  /api/messages?q=<text>&limit=20 -> stored messages, newest first
-
-Slash commands (handled in /api/chat before LLM call):
-  /help, /messages [query], /calendar [days], /gmail <query>, /models, /model <target>
-
-Providers Supported:
-  - Ollama (local default)
-  - Google Gemini API (set GEMINI_API_KEY in .env)
-  - OpenRouter API (set OPENROUTER_API_KEY in .env)
-
-Auth: Authorization: Bearer <token>. The token comes from the FIN_TOKEN
-environment variable (or .env), or is generated on first run and saved to
-token.txt next to this file. Enter the same token in the app's settings.
-
-Google tools (Gmail + Calendar) are optional: they activate only when
-token.json exists (run auth_google.py once) and google-api-python-client
-is installed. Standard library only — no pip installs needed for chat.
 """
 
-import base64
 import datetime
 import hashlib
 import hmac
@@ -46,6 +30,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
 
 
 def load_dotenv():
@@ -72,6 +58,28 @@ def load_dotenv():
 
 
 load_dotenv()
+
+import db
+import mcp_bridge
+import plugins
+import skills
+from tools import (
+    NATIVE_TOOL_DEFS,
+    NATIVE_TOOL_FUNCS,
+    execute_approved_action,
+    format_ms_date,
+    google_services,
+    tool_calendar_create,
+    tool_calendar_list,
+    tool_drive_read,
+    tool_drive_search,
+    tool_gmail_prepare_send,
+    tool_gmail_read,
+    tool_gmail_search,
+    tool_messages_recent,
+    tool_messages_search,
+    tool_messages_thread,
+)
 
 PORT = int(os.environ.get("FIN_PORT", "8080"))
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
@@ -164,23 +172,25 @@ def ollama_list_models():
 def provider_list_models():
     """List models available for the app's selector (Ollama + configured cloud)."""
     models = []
-    # 1. Local Ollama models
     try:
         models.extend(ollama_list_models())
     except Exception as e:
         sys.stderr.write("[models] Failed to query Ollama tags: %s\n" % e)
         models.append({"name": get_default_model(), "size": 0, "modified_at": "local"})
 
-    # 2. Add Gemini models if key configured
     gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
     if gemini_key:
         for gm in ("gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"):
             models.append({"name": gm, "size": 0, "modified_at": "Google Gemini API"})
 
-    # 3. Add OpenRouter models if key configured
     openrouter_key = os.environ.get("OPENROUTER_API_KEY") or ""
     if openrouter_key:
-        for om in ("anthropic/claude-3.5-sonnet", "deepseek/deepseek-chat", "meta-llama/llama-3.3-70b-instruct", "openai/gpt-4o"):
+        for om in (
+            "anthropic/claude-3.5-sonnet",
+            "deepseek/deepseek-chat",
+            "meta-llama/llama-3.3-70b-instruct",
+            "openai/gpt-4o",
+        ):
             models.append({"name": om, "size": 0, "modified_at": "OpenRouter API"})
 
     return models
@@ -204,34 +214,50 @@ TOKEN = load_token()
 
 SYSTEM_PROMPT = (
     "You are Fin, a personal AI assistant running locally on the user's own "
-    "computer. Be direct and concise. You help with the user's job search, "
-    "schedule, messages, and everyday questions. If you don't know something, "
-    "say so plainly instead of guessing.\n\n"
-    "You have active tools connected to the user's Google account (Gmail and Google Calendar) "
-    "and their phone SMS messages. When the user asks about emails, calendar, schedule, meetings, "
-    "appointments, or text messages, always call the appropriate tool functions (gmail_search, "
-    "gmail_read, calendar_list, calendar_create, messages_search) to look up or update the real data."
+    "computer. Be direct, helpful, and concise. You help with the user's job search, "
+    "documents, emails, schedule, phone text messages, long-term memory, and everyday questions. "
+    "If you don't know something, say so plainly instead of guessing.\n\n"
+    "You have active tools connected to:\n"
+    "- Google Drive (`drive_search`, `drive_read`, `drive_list_folder`, `drive_create_file`, `drive_update_file`)\n"
+    "- Gmail (`gmail_search`, `gmail_read`, `gmail_create_draft`, `gmail_prepare_send`)\n"
+    "- Phone SMS Messages (`messages_recent`, `messages_search`, `messages_thread`)\n"
+    "- Google Calendar & Contacts (`calendar_list`, `calendar_create`, `calendar_delete`, `contacts_search`)\n"
+    "- PostgreSQL + pgvector Memory & Tasks (`memory_remember`, `memory_recall`, `memory_forget`, `task_add`, `task_list`, `task_complete`)\n"
+    "- Web Research (`web_search`, `web_fetch`)\n\n"
+    "IMPORTANT RULES:\n"
+    "1. When the user asks about their recent texts/SMS, call `messages_recent` or `messages_search` or `messages_thread`.\n"
+    "2. When the user asks about files, resumes, docs, or spreadsheets, call `drive_search` and `drive_read`.\n"
+    "3. When the user asks to send or reply to an email, ALWAYS call `gmail_prepare_send`. "
+    "Never claim an email has already been sent until the user approves the staged draft (they can say 'yes, send it' in natural language or '/approve <id>')."
 )
 
 
-def system_message():
+def system_message(user_text=""):
     now = datetime.datetime.now().astimezone()
-    return {
-        "role": "system",
-        "content": SYSTEM_PROMPT
+    base = (
+        SYSTEM_PROMPT
         + "\nCurrent date and time: "
         + now.strftime("%A, %B %d, %Y at %I:%M %p %Z")
-        + ".",
+        + "."
+    )
+    dynamic_ctx = plugins.build_dynamic_context(user_text)
+    return {
+        "role": "system",
+        "content": base + dynamic_ctx,
     }
 
 
 # ---------------------------------------------------------------------------
-# SMS / message store (synced from the phone app)
+# SMS / message store (PostgreSQL + messages.json backup)
 # ---------------------------------------------------------------------------
 
 MESSAGES_PATH = os.path.join(HERE, "messages.json")
 _messages_lock = threading.Lock()
 _MAX_STORED_MESSAGES = 5000
+
+# Initialize PostgreSQL schema & migrate existing messages.json on import/start
+db.init_db_schema()
+db.migrate_json_messages(MESSAGES_PATH)
 
 
 def _message_id(address, date, body):
@@ -256,12 +282,13 @@ def _save_messages(entries):
 
 
 def store_messages(items):
-    """Append messages, deduping by (address, date, body). Returns (new, total)."""
+    """Store SMS messages in PostgreSQL (with pgvector embeddings) and messages.json backup."""
     with _messages_lock:
         entries = _load_messages()
         seen = {e.get("id") for e in entries}
         now_iso = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
         new = 0
+        new_items = []
         for item in items:
             if not isinstance(item, dict):
                 continue
@@ -274,21 +301,26 @@ def store_messages(items):
             if mid in seen:
                 continue
             seen.add(mid)
-            entries.append(
-                {
-                    "id": mid,
-                    "address": address,
-                    "body": body,
-                    "date": date,
-                    "type": str(item.get("type", "")),
-                    "received_at": now_iso,
-                }
-            )
+            entry = {
+                "id": mid,
+                "address": address,
+                "body": body,
+                "date": date,
+                "type": str(item.get("type", "")),
+                "received_at": now_iso,
+            }
+            entries.append(entry)
+            new_items.append(entry)
             new += 1
         if len(entries) > _MAX_STORED_MESSAGES:
             entries = entries[-_MAX_STORED_MESSAGES:]
         _save_messages(entries)
-        return new, len(entries)
+
+    # Sync new messages into PostgreSQL
+    db_res = db.store_sms_in_db(new_items if new_items else items, compute_vectors=True)
+    if db_res is not None:
+        return db_res
+    return new, len(entries)
 
 
 def _message_sort_key(entry):
@@ -299,321 +331,40 @@ def _message_sort_key(entry):
 
 
 def search_messages(query, limit=20):
+    """Search SMS messages in PostgreSQL first, falling back to messages.json."""
+    q = (query or "").strip()
+    if not q:
+        db_res = db.query_recent_sms(limit=limit)
+    else:
+        db_res = db.search_sms_db(q, limit=limit)
+    if db_res is not None:
+        return db_res
+
     with _messages_lock:
         entries = _load_messages()
-    q = (query or "").strip().lower()
-    if q:
+    q_low = q.lower()
+    if q_low:
         entries = [
             e
             for e in entries
-            if q in str(e.get("address", "")).lower() or q in str(e.get("body", "")).lower()
+            if q_low in str(e.get("address", "")).lower() or q_low in str(e.get("body", "")).lower()
         ]
     entries.sort(key=_message_sort_key, reverse=True)
     return entries[: max(1, min(limit, 100))], len(entries)
 
 
-# ---------------------------------------------------------------------------
-# Google tools (Gmail + Calendar) — optional, lazy imports only
-# ---------------------------------------------------------------------------
-
-GOOGLE_SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
-    "https://www.googleapis.com/auth/calendar",
-]
-
-_google_cache = {"checked": False, "gmail": None, "calendar": None}
-
-
-def _google_services():
-    """Return (gmail_service, calendar_service) or (None, None)."""
-    if _google_cache["checked"]:
-        return _google_cache["gmail"], _google_cache["calendar"]
-    _google_cache["checked"] = True
-    token_path = os.path.join(HERE, "token.json")
-    if not os.path.exists(token_path):
-        return None, None
-    try:
-        from google.auth.transport.requests import Request
-        from google.oauth2.credentials import Credentials
-        from googleapiclient.discovery import build
-    except ImportError:
-        return None, None
-    try:
-        creds = Credentials.from_authorized_user_file(token_path, GOOGLE_SCOPES)
-        if not creds.valid:
-            if creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-                with open(token_path, "w", encoding="utf-8") as f:
-                    f.write(creds.to_json())
-            else:
-                return None, None
-        _google_cache["gmail"] = build("gmail", "v1", credentials=creds)
-        _google_cache["calendar"] = build("calendar", "v3", credentials=creds)
-    except Exception:  # noqa: BLE001
-        return None, None
-    return _google_cache["gmail"], _google_cache["calendar"]
-
-
-def _gmail_text_from_payload(payload):
-    mime = payload.get("mimeType", "")
-    if mime == "text/plain":
-        data = payload.get("body", {}).get("data", "")
-        try:
-            padded = data + "=" * (-len(data) % 4)
-            return base64.urlsafe_b64decode(padded).decode("utf-8", "replace")
-        except Exception:  # noqa: BLE001
-            return ""
-    text = ""
-    for part in payload.get("parts", []) or []:
-        text += _gmail_text_from_payload(part)
-    return text
-
-
-def tool_gmail_search(args):
-    gmail, _ = _google_services()
-    if gmail is None:
-        return "Gmail is not connected."
-    query = str(args.get("query", ""))
-    try:
-        max_results = min(int(args.get("max_results", 10) or 10), 20)
-    except (TypeError, ValueError):
-        max_results = 10
-    try:
-        res = (
-            gmail.users()
-            .messages()
-            .list(userId="me", q=query, maxResults=max_results)
-            .execute()
-        )
-        ids = [m["id"] for m in res.get("messages", [])]
-        if not ids:
-            return "No messages matched."
-        lines = []
-        for mid in ids:
-            m = (
-                gmail.users()
-                .messages()
-                .get(
-                    userId="me",
-                    id=mid,
-                    format="metadata",
-                    metadataHeaders=["From", "Subject", "Date"],
-                )
-                .execute()
-            )
-            headers = {
-                h["name"]: h["value"]
-                for h in m.get("payload", {}).get("headers", [])
-            }
-            lines.append(
-                "- [%s] %s | %s | %s | %s"
-                % (
-                    mid,
-                    headers.get("Date", ""),
-                    headers.get("From", ""),
-                    headers.get("Subject", ""),
-                    m.get("snippet", ""),
-                )
-            )
-        return "\n".join(lines)
-    except Exception as e:  # noqa: BLE001
-        return "Gmail search failed: %s" % e
-
-
-def tool_gmail_read(args):
-    gmail, _ = _google_services()
-    if gmail is None:
-        return "Gmail is not connected."
-    message_id = str(args.get("message_id", ""))
-    if not message_id:
-        return "No message_id given."
-    try:
-        m = gmail.users().messages().get(userId="me", id=message_id, format="full").execute()
-        headers = {
-            h["name"]: h["value"] for h in m.get("payload", {}).get("headers", [])
-        }
-        body = _gmail_text_from_payload(m.get("payload", {}))
-        return "From: %s\nSubject: %s\nDate: %s\n\n%s" % (
-            headers.get("From", ""),
-            headers.get("Subject", ""),
-            headers.get("Date", ""),
-            body[:8000],
-        )
-    except Exception as e:  # noqa: BLE001
-        return "Gmail read failed: %s" % e
-
-
-def tool_calendar_list(args):
-    _, calendar = _google_services()
-    if calendar is None:
-        return "Calendar is not connected."
-    try:
-        days = min(int(args.get("days", 7) or 7), 31)
-    except (TypeError, ValueError):
-        days = 7
-    try:
-        now = datetime.datetime.now(datetime.timezone.utc)
-        res = (
-            calendar.events()
-            .list(
-                calendarId="primary",
-                timeMin=now.isoformat(),
-                timeMax=(now + datetime.timedelta(days=days)).isoformat(),
-                singleEvents=True,
-                orderBy="startTime",
-            )
-            .execute()
-        )
-        events = res.get("items", [])
-        if not events:
-            return "No events in the next %d day(s)." % days
-        lines = []
-        for ev in events:
-            start = ev.get("start", {}).get("dateTime") or ev.get("start", {}).get("date", "")
-            end = ev.get("end", {}).get("dateTime") or ev.get("end", {}).get("date", "")
-            lines.append("- %s to %s | %s" % (start, end, ev.get("summary", "(no title)")))
-        return "\n".join(lines)
-    except Exception as e:  # noqa: BLE001
-        return "Calendar list failed: %s" % e
-
-
-def tool_calendar_create(args):
-    _, calendar = _google_services()
-    if calendar is None:
-        return "Calendar is not connected."
-    title = str(args.get("title", "")).strip()
-    start = str(args.get("start", "")).strip()
-    end = str(args.get("end", "")).strip()
-    if not title or not start or not end:
-        return "calendar_create needs title, start and end (ISO date-time)."
-    body = {
-        "summary": title,
-        "start": {"dateTime": start},
-        "end": {"dateTime": end},
-    }
-    if args.get("description"):
-        body["description"] = str(args["description"])
-    try:
-        ev = calendar.events().insert(calendarId="primary", body=body).execute()
-        return "Created event: %s (%s to %s), id %s" % (
-            title,
-            start,
-            end,
-            ev.get("id", ""),
-        )
-    except Exception as e:  # noqa: BLE001
-        return "Calendar create failed: %s" % e
-
-
-def tool_messages_search(args):
-    query = str(args.get("query", ""))
-    try:
-        limit = min(int(args.get("limit", 10) or 10), 20)
-    except (TypeError, ValueError):
-        limit = 10
-    results, total = search_messages(query, limit)
-    if not results:
-        if total == 0:
-            return "No SMS messages have been synced from the phone app yet. If the user meant emails, use gmail_search instead."
-        return "No stored SMS messages matched the query '%s'." % query
-    lines = [
-        "- %s | %s | %s" % (e.get("date", ""), e.get("address", ""), e.get("body", "")[:300])
-        for e in results
-    ]
-    return "%d matching message(s):\n%s" % (total, "\n".join(lines))
-
-
-TOOL_DEFS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "gmail_search",
-            "description": "Search the user's Gmail. Returns sender, subject, date, snippet and message id for each match.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "description": "Gmail search query, e.g. 'from:payit subject:interview'"},
-                    "max_results": {"type": "integer", "description": "Max results, default 10"},
-                },
-                "required": ["query"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "gmail_read",
-            "description": "Read the full text of one Gmail message by its id.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "message_id": {"type": "string", "description": "Gmail message id from gmail_search"},
-                },
-                "required": ["message_id"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "calendar_list",
-            "description": "List upcoming Google Calendar events.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "days": {"type": "integer", "description": "How many days ahead, default 7"},
-                },
-                "required": [],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "calendar_create",
-            "description": "Create a Google Calendar event.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string"},
-                    "start": {"type": "string", "description": "ISO date-time with offset, e.g. 2026-10-26T09:00:00-05:00"},
-                    "end": {"type": "string", "description": "ISO date-time with offset"},
-                    "description": {"type": "string"},
-                },
-                "required": ["title", "start", "end"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "messages_search",
-            "description": "Search SMS/text messages synced from the user's phone.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "description": "Text to find in the sender or message body"},
-                    "limit": {"type": "integer", "description": "Max results, default 10"},
-                },
-                "required": ["query"],
-            },
-        },
-    },
-]
-
-TOOL_FUNCS = {
-    "gmail_search": tool_gmail_search,
-    "gmail_read": tool_gmail_read,
-    "calendar_list": tool_calendar_list,
-    "calendar_create": tool_calendar_create,
-    "messages_search": tool_messages_search,
-}
-
-
 def tools_available():
-    gmail, calendar = _google_services()
-    return gmail is not None or calendar is not None
+    """Local tools (SMS, PostgreSQL Memory, Tasks, Web, Skills, MCP) are always active."""
+    return True
 
+
+def get_all_tool_defs():
+    mcp_defs, _ = mcp_bridge.discover_mcp_tools()
+    return NATIVE_TOOL_DEFS + mcp_defs
+
+
+TOOL_DEFS = NATIVE_TOOL_DEFS
+TOOL_FUNCS = NATIVE_TOOL_FUNCS
 
 _FALLBACK = object()  # sentinel: tools unsupported, use v1 chat path
 
@@ -625,9 +376,18 @@ _FALLBACK = object()  # sentinel: tools unsupported, use v1 chat path
 SLASH_HELP = (
     "Fin commands:\n"
     "/help — show this list\n"
-    "/messages [query] — search texts synced from your phone (no search = 5 most recent)\n"
-    "/calendar [days] — upcoming calendar events (default 7 days)\n"
+    "/pending — list actions awaiting your approval (staged emails, Drive edits)\n"
+    "/approve [id] — approve & send/execute a pending action (or just say 'yes, send it')\n"
+    "/reject [id] — cancel a pending action (or just say 'cancel')\n"
+    "/messages [query] — read recent phone texts or search SMS history\n"
+    "/drive <query> — search your Google Drive documents & spreadsheets\n"
     "/gmail <query> — search your Gmail\n"
+    "/calendar [days] — upcoming calendar events (default 7 days)\n"
+    "/memory [query] — list or search PostgreSQL + pgvector long-term memories\n"
+    "/remember <fact> — save a fact into PostgreSQL + pgvector memory\n"
+    "/tasks — list open tasks, reminders, and job applications\n"
+    "/skills — list installed modular assistant skills (/briefing, /triage, /jobs)\n"
+    "/mcp — show Model Context Protocol (MCP) server status\n"
     "/models — show available models and active selection\n"
     "/model <name|number> — switch active model"
 )
@@ -638,35 +398,24 @@ _GOOGLE_NOT_CONNECTED = (
 )
 
 
-def _format_message_date(entry):
-    raw = entry.get("date", "")
-    try:
-        ms = int(raw)
-        dt = datetime.datetime.fromtimestamp(ms / 1000.0).astimezone()
-        return dt.strftime("%b %d, %I:%M %p")
-    except (TypeError, ValueError):
-        return str(raw)
-
-
 def _cmd_messages(query):
     if query:
         results, _ = search_messages(query, 10)
         if not results:
             return "No messages found for '%s'." % query
     else:
-        results, _ = search_messages("", 5)
+        results, _ = search_messages("", 10)
         if not results:
             return "No messages stored yet — sync messages from the Fin app first."
     lines = [
-        "From %s — %s: %s" % (e.get("address", ""), _format_message_date(e), e.get("body", ""))
+        "From %s — %s: %s" % (e.get("address", ""), format_ms_date(e.get("date", "")), e.get("body", ""))
         for e in results
     ]
     return "\n".join(lines)
 
 
 def _cmd_calendar(arg):
-    _, calendar = _google_services()
-    if calendar is None:
+    if google_services().get("calendar") is None:
         return _GOOGLE_NOT_CONNECTED % "Calendar"
     try:
         days = int(arg) if arg else 7
@@ -676,12 +425,79 @@ def _cmd_calendar(arg):
 
 
 def _cmd_gmail(query):
-    gmail, _ = _google_services()
-    if gmail is None:
+    if google_services().get("gmail") is None:
         return _GOOGLE_NOT_CONNECTED % "Gmail"
     if not query:
         return "Usage: /gmail <search words> — e.g. /gmail interview"
     return tool_gmail_search({"query": query, "max_results": 10})
+
+
+def _cmd_drive(query):
+    if google_services().get("drive") is None:
+        return _GOOGLE_NOT_CONNECTED % "Google Drive"
+    if not query:
+        return tool_drive_search({"query": "", "max_results": 10})
+    return tool_drive_search({"query": query, "max_results": 10})
+
+
+def _cmd_pending():
+    items = db.list_pending_approvals()
+    if not items:
+        return "✅ No pending approvals in queue."
+    lines = ["⏳ Pending Approvals:"]
+    for p in items:
+        lines.append(f"- [#{p['id']}] ({p['action_type']}) {p['summary']}")
+    lines.append("\nReply 'yes, send it' or `/approve <id>` to execute, or 'cancel' / `/reject <id>`.")
+    return "\n".join(lines)
+
+
+def _cmd_approve(arg):
+    aid = (arg or "").strip().lstrip("#").lower() or None
+    rec = db.get_pending_approval(aid)
+    if not rec:
+        return "No matching pending approval found." if aid else "No pending approvals waiting in queue."
+    return execute_approved_action(rec)
+
+
+def _cmd_reject(arg):
+    aid = (arg or "").strip().lstrip("#").lower() or None
+    rec = db.get_pending_approval(aid)
+    if not rec:
+        return "No matching pending approval found." if aid else "No pending approvals waiting in queue."
+    db.resolve_pending_approval(rec["id"], "rejected", "Rejected via /reject command")
+    db.log_audit_event("slash_cmd", rec["action_type"], rec.get("payload"), "Rejected via /reject", status="rejected")
+    return f"🚫 Cancelled pending action [#{rec['id']}]: {rec.get('summary', '')}"
+
+
+def _cmd_memory(query):
+    rows = db.recall_memories(query=query or "", limit=15)
+    if not rows:
+        return "No memories stored yet. Use `/remember <fact>` or tell Fin to remember something."
+    lines = ["🧠 Stored Memories (PostgreSQL + pgvector):"]
+    for r in rows:
+        subj = f"{r['subject']}: " if r.get("subject") else ""
+        lines.append(f"- [#{r['id']}] ({r['category']}) {subj}{r['content']}")
+    return "\n".join(lines)
+
+
+def _cmd_remember(fact):
+    if not fact:
+        return "Usage: /remember <fact to store in long-term memory>"
+    row = db.remember_fact(fact, category="fact", source_type="slash_cmd", importance=4)
+    if not row:
+        return "Failed to store memory in PostgreSQL."
+    return f"🧠 Saved to PostgreSQL + pgvector memory [#{row['id']}]: {row['content']}"
+
+
+def _cmd_tasks():
+    rows = db.list_tasks(status="open", limit=25)
+    if not rows:
+        return "No open tasks or reminders."
+    lines = ["✅ Open Tasks & Reminders:"]
+    for r in rows:
+        notes = f" — {r['notes']}" if r.get("notes") else ""
+        lines.append(f"- [#{r['id']}] ({r['category']}) {r['title']}{notes}")
+    return "\n".join(lines)
 
 
 def _cmd_models():
@@ -739,7 +555,9 @@ def _last_user_text(messages):
 
 
 def handle_slash_command(text):
-    """Return a reply string if text is a slash command, else None."""
+    """Return a reply string if text is a deterministic slash command, else None.
+    Skill slash commands (/briefing, /triage, /jobs, /research, /schedule) return None
+    so they pass through to the LLM with their SKILL.md instructions injected."""
     stripped = (text or "").lstrip()
     if not stripped.startswith("/"):
         return None
@@ -748,16 +566,39 @@ def handle_slash_command(text):
     arg = parts[1].strip() if len(parts) > 1 else ""
     if cmd == "help":
         return SLASH_HELP
+    if cmd == "pending":
+        return _cmd_pending()
+    if cmd == "approve":
+        return _cmd_approve(arg)
+    if cmd == "reject":
+        return _cmd_reject(arg)
     if cmd == "messages":
         return _cmd_messages(arg)
     if cmd == "calendar":
         return _cmd_calendar(arg)
     if cmd == "gmail":
         return _cmd_gmail(arg)
+    if cmd == "drive":
+        return _cmd_drive(arg)
+    if cmd == "memory":
+        return _cmd_memory(arg)
+    if cmd == "remember":
+        return _cmd_remember(arg)
+    if cmd == "tasks":
+        return _cmd_tasks()
+    if cmd == "skills":
+        return skills.format_skills_list()
+    if cmd == "mcp":
+        if arg.lower() == "reload":
+            mcp_bridge.discover_mcp_tools(force_reload=True)
+        return mcp_bridge.format_mcp_status()
     if cmd == "models":
         return _cmd_models()
     if cmd == "model":
         return _cmd_switch_model(arg)
+    # Allow skill slash commands (/briefing, /triage, /jobs, /research, /schedule) to invoke LLM
+    if cmd in ("briefing", "triage", "jobs", "research", "schedule"):
+        return None
     return "Unknown command '/%s'. Try /help." % cmd
 
 
@@ -798,31 +639,36 @@ def _execute_tool_call(call):
             args = {}
     if not isinstance(args, dict):
         args = {}
-    func = TOOL_FUNCS.get(name)
-    if func is None:
-        result = "Unknown tool: %s" % name
-    else:
-        try:
-            sys.stderr.write("[tools] Executing %s: %s\n" % (name, json.dumps(args)))
-            result = func(args)
-            sys.stderr.write("[tools] Result from %s: %s\n" % (name, str(result)[:100]))
-        except Exception as e:  # noqa: BLE001
-            result = "Tool %s failed: %s" % (name, e)
-            sys.stderr.write("[tools] %s failed: %s\n" % (name, e))
+
+    func = NATIVE_TOOL_FUNCS.get(name)
+    try:
+        sys.stderr.write("[tools] Executing %s: %s\n" % (name, json.dumps(args)))
+        if func is not None:
+            raw_result = func(args)
+        elif name.startswith("mcp__"):
+            raw_result = mcp_bridge.call_mcp_tool(name, args)
+        else:
+            raw_result = "Unknown tool: %s" % name
+        result = plugins.post_tool_hook(name, args, raw_result)
+        sys.stderr.write("[tools] Result from %s: %s\n" % (name, str(result)[:120]))
+    except Exception as e:  # noqa: BLE001
+        result = "Tool %s failed: %s" % (name, e)
+        sys.stderr.write("[tools] %s failed: %s\n" % (name, e))
     return name, result
 
 
 def _chat_with_tools(messages, model):
-    """Agentic loop with tools (supports Ollama, Gemini, OpenRouter)."""
+    """Multi-round agentic loop with native & MCP tools (supports Ollama, Gemini, OpenRouter)."""
     provider, clean_model, endpoint_url, api_key = resolve_provider(model)
+    active_tool_defs = get_all_tool_defs()
 
-    for round_idx in range(3):
+    for round_idx in range(6):
         if provider == "ollama":
             payload = {
                 "model": clean_model,
                 "messages": messages,
                 "stream": False,
-                "tools": TOOL_DEFS,
+                "tools": active_tool_defs,
                 "options": {"num_ctx": NUM_CTX},
             }
         else:
@@ -830,7 +676,7 @@ def _chat_with_tools(messages, model):
                 "model": clean_model,
                 "messages": messages,
                 "stream": False,
-                "tools": TOOL_DEFS,
+                "tools": active_tool_defs,
             }
 
         try:
@@ -854,7 +700,10 @@ def _chat_with_tools(messages, model):
             calls = msg.get("tool_calls") or []
             content = msg.get("content", "")
 
-        sys.stderr.write("[tools] Round %d: calls=%d, content=%r\n" % (round_idx + 1, len(calls), content[:80] if content else ""))
+        sys.stderr.write(
+            "[tools] Round %d: calls=%d, content=%r\n"
+            % (round_idx + 1, len(calls), content[:80] if content else "")
+        )
         if not calls:
             return content
 
@@ -862,20 +711,22 @@ def _chat_with_tools(messages, model):
             messages.append({"role": "assistant", "content": content, "tool_calls": calls})
             for call in calls:
                 _, result = _execute_tool_call(call)
-                messages.append({"role": "tool", "content": str(result)[:8000]})
+                messages.append({"role": "tool", "content": str(result)[:10000]})
         else:
             messages.append({"role": "assistant", "content": content or "", "tool_calls": calls})
             for call in calls:
                 call_id = call.get("id", "call_1")
                 name, result = _execute_tool_call(call)
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": call_id,
-                    "name": name,
-                    "content": str(result)[:8000],
-                })
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": call_id,
+                        "name": name,
+                        "content": str(result)[:10000],
+                    }
+                )
 
-    return "I tried to use tools multiple times without finishing — please try rephrasing that."
+    return "I ran multiple tool steps and reached the turn limit — please let me know how you'd like to proceed."
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -955,6 +806,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(body)
                 return
+            g_svcs = google_services()
             self._send_json(
                 200,
                 {
@@ -962,6 +814,10 @@ class Handler(BaseHTTPRequestHandler):
                     "model": cur_model,
                     "provider": provider,
                     "tools": tools_available(),
+                    "tool_count": len(get_all_tool_defs()),
+                    "db_connected": db.db_available(),
+                    "google_connected": g_svcs.get("gmail") is not None or g_svcs.get("drive") is not None,
+                    "skills_loaded": len(skills.load_all_skills()),
                 },
             )
             return
@@ -1033,34 +889,42 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": "messages must contain non-empty content"})
             return
 
-        # Per-request model selection (client sends "model"; default is get_default_model()).
         req_model = data.get("model")
         if not isinstance(req_model, str) or not req_model.strip():
             active_model = get_default_model()
         else:
             active_model = req_model.strip()
 
-        # Deterministic slash commands — answered here, no model call.
         user_text = _last_user_text(messages)
+
+        # 1. Natural-Language Approval Gate Interceptor ("yes, send it", "approve", "cancel")
+        nl_approval_reply = plugins.check_natural_language_approval(user_text)
+        if nl_approval_reply is not None:
+            self.log_message("Executed natural-language approval action from: %r", user_text[:80])
+            self._send_ndjson_done(nl_approval_reply)
+            return
+
+        # 2. Deterministic slash commands — answered here, no model call.
         slash_reply = handle_slash_command(user_text)
         if slash_reply is not None:
             self.log_message("Executed slash command from prompt: %r", user_text[:80])
             self._send_ndjson_done(slash_reply)
             return
 
-        # Prepend system prompt
+        # 3. Prepend system prompt + PostgreSQL/pgvector memory + matched SKILL.md instructions
+        sys_msg = system_message(user_text)
         if messages[0].get("role") != "system":
-            messages = [system_message()] + messages
+            messages = [sys_msg] + messages
         else:
             messages[0] = {
                 "role": "system",
-                "content": system_message()["content"] + "\n\n" + str(messages[0].get("content", "")),
+                "content": sys_msg["content"] + "\n\n" + str(messages[0].get("content", "")),
             }
 
         provider, clean_model, endpoint_url, api_key = resolve_provider(active_model)
         self.log_message("Chat request using [%s] %s (prompt: %r)", provider, clean_model, user_text[:60])
 
-        # --- Tool path: only when Google tools are configured ---
+        # --- Tool path: always active for local + Google + MCP tools ---
         if tools_available():
             try:
                 final_text = _chat_with_tools(messages, active_model)
@@ -1070,10 +934,11 @@ class Handler(BaseHTTPRequestHandler):
                 self._send_json(502, {"error": "cannot reach LLM provider (%s)" % provider})
                 return
             if final_text is not _FALLBACK:
+                plugins.post_response_hook(user_text, final_text, active_model)
                 self._send_ndjson_done(final_text)
                 return
 
-        # --- Streaming path (no tools or tools fallback) ---
+        # --- Streaming path (fallback for models that do not support tools) ---
         if provider == "ollama":
             payload = {
                 "model": clean_model,
@@ -1105,6 +970,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.close_connection = True
 
+        full_streamed = []
         try:
             for line in resp:
                 line = line.strip()
@@ -1117,6 +983,7 @@ class Handler(BaseHTTPRequestHandler):
                         continue
                     text = (chunk.get("message") or {}).get("content", "")
                     if text:
+                        full_streamed.append(text)
                         self.wfile.write((json.dumps({"delta": text}) + "\n").encode("utf-8"))
                         self.wfile.flush()
                     if chunk.get("done"):
@@ -1131,12 +998,14 @@ class Handler(BaseHTTPRequestHandler):
                             chunk = json.loads(data_part)
                             delta = (chunk.get("choices") or [{}])[0].get("delta", {}).get("content", "")
                             if delta:
+                                full_streamed.append(delta)
                                 self.wfile.write((json.dumps({"delta": delta}) + "\n").encode("utf-8"))
                                 self.wfile.flush()
                         except ValueError:
                             continue
             self.wfile.write(b"data: [DONE]\n")
             self.wfile.flush()
+            plugins.post_response_hook(user_text, "".join(full_streamed), active_model)
         except (BrokenPipeError, ConnectionResetError):
             pass
         finally:
@@ -1149,7 +1018,8 @@ def main():
     provider, clean_m, _, _ = resolve_provider(active)
     print("Fin agent server listening on port %d" % PORT)
     print("Provider: %s — Model: %s  (Ollama at %s)" % (provider, clean_m, OLLAMA_URL))
-    print("Google tools: %s" % ("enabled" if tools_available() else "off (run auth_google.py to enable)"))
+    print("PostgreSQL + pgvector memory: %s" % ("connected" if db.db_available() else "offline"))
+    print("Skills loaded: %d | Tools registered: %d" % (len(skills.load_all_skills()), len(get_all_tool_defs())))
     print("Pairing token (enter this in the Fin app settings): %s" % TOKEN)
     print("Token also saved to %s" % os.path.join(HERE, "token.txt"))
     try:

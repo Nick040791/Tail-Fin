@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "fin-local": {
+      "description": "Fin built-in MCP self-bridge for local workspace & system inspection",
+      "command": "python3",
+      "args": ["-m", "server.mcp_bridge.fin_mcp_server"],
+      "enabled": false,
+      "require_approval": []
+    },
+    "filesystem": {
+      "description": "Sandboxed local Documents filesystem MCP server",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/mrnicholas/Documents"],
+      "enabled": false,
+      "require_approval": ["write_file", "edit_file", "move_file"]
+    },
+    "github": {
+      "description": "GitHub repository and PR management MCP server",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "enabled": false,
+      "require_approval": ["create_pull_request", "push_files", "create_issue"]
+    }
+  }
+}
