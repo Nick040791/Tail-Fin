@@ -654,6 +654,38 @@ def tool_calendar_list(args):
         return f"Calendar list failed: {e}"
 
 
+def tool_calendar_search(args):
+    calendar = google_services().get("calendar")
+    if calendar is None:
+        return "Calendar is not connected."
+    query = str(args.get("query", "")).strip()
+    if not query:
+        return tool_calendar_list(args)
+    try:
+        res = (
+            calendar.events()
+            .list(
+                calendarId="primary",
+                q=query,
+                maxResults=20,
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
+        events = res.get("items", [])
+        if not events:
+            return f"No calendar events matched '{query}'."
+        lines = []
+        for ev in events:
+            start = ev.get("start", {}).get("dateTime") or ev.get("start", {}).get("date", "")
+            end = ev.get("end", {}).get("dateTime") or ev.get("end", {}).get("date", "")
+            lines.append(f"- [{ev.get('id', '')}] {start} to {end} | {ev.get('summary', '(no title)')}")
+        return "\n".join(lines)
+    except Exception as e:  # noqa: BLE001
+        return f"Calendar search failed: {e}"
+
+
 def tool_calendar_create(args):
     calendar = google_services().get("calendar")
     if calendar is None:
@@ -1169,6 +1201,20 @@ NATIVE_TOOL_DEFS = [
     {
         "type": "function",
         "function": {
+            "name": "calendar_search",
+            "description": "Search Google Calendar events by keyword or title.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search keyword for calendar events"},
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "calendar_create",
             "description": "Create a Google Calendar event.",
             "parameters": {
@@ -1353,6 +1399,7 @@ NATIVE_TOOL_FUNCS = {
     "messages_search": tool_messages_search,
     "messages_thread": tool_messages_thread,
     "calendar_list": tool_calendar_list,
+    "calendar_search": tool_calendar_search,
     "calendar_create": tool_calendar_create,
     "calendar_delete": tool_calendar_delete,
     "contacts_search": tool_contacts_search,

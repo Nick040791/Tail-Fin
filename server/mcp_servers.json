@@ -1,14 +1,14 @@
 {
   "mcpServers": {
-    "fin-local": {
-      "description": "Fin built-in MCP self-bridge for local workspace & system inspection",
+    "fin-workspace": {
+      "description": "Fin built-in MCP server for PC system telemetry & local Documents workspace",
       "command": "python3",
-      "args": ["-m", "server.mcp_bridge.fin_mcp_server"],
-      "enabled": false,
-      "require_approval": []
+      "args": ["server/mcp_bridge/workspace_mcp_server.py"],
+      "enabled": true,
+      "require_approval": ["workspace_write_file"]
     },
     "filesystem": {
-      "description": "Sandboxed local Documents filesystem MCP server",
+      "description": "Node.js @modelcontextprotocol/server-filesystem for local Documents",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/mrnicholas/Documents"],
       "enabled": false,
